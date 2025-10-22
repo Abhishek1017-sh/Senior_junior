@@ -1,0 +1,510 @@
+{
+  "info": {
+    "name": "Senior-Junior Interaction Platform API",
+    "_postman_id": "12345678-1234-1234-1234-123456789012",
+    "description": "Complete API collection for the Senior-Junior mentorship platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"johndoe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"junior\",\n  \"profile\": {\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"interests\": [\"Web Development\", \"AI/ML\"]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get All Seniors",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/users/seniors?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "seniors"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Seniors by Skill",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/users/seniors/search?skill=React",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "seniors", "search"],
+              "query": [
+                {
+                  "key": "skill",
+                  "value": "React"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/users/:userId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", ":userId"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "USER_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"profile\": {\n    \"bio\": \"Full-stack developer passionate about mentoring\"\n  },\n  \"role\": \"senior\",\n  \"seniorProfile\": {\n    \"skills\": [\"React\", \"Node.js\", \"MongoDB\"],\n    \"experience\": \"Software Engineer at Tech Corp\",\n    \"hourlyRate\": 50\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Upload Profile Picture",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "profilePicture",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/profile/picture",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "profile", "picture"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Connections",
+      "item": [
+        {
+          "name": "Send Connection Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/connections/request/:seniorId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "connections", "request", ":seniorId"],
+              "variable": [
+                {
+                  "key": "seniorId",
+                  "value": "SENIOR_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Accept Connection Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/connections/accept/:juniorId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "connections", "accept", ":juniorId"],
+              "variable": [
+                {
+                  "key": "juniorId",
+                  "value": "JUNIOR_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Connections",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/connections",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "connections"]
+            }
+          }
+        },
+        {
+          "name": "Remove Connection",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/connections/:connectionId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "connections", ":connectionId"],
+              "variable": [
+                {
+                  "key": "connectionId",
+                  "value": "CONNECTION_ID_HERE"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sessions",
+      "item": [
+        {
+          "name": "Book Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"seniorId\": \"SENIOR_USER_ID\",\n  \"topic\": \"React Best Practices\",\n  \"scheduledTime\": \"2025-11-01T10:00:00Z\",\n  \"duration\": 60,\n  \"notes\": \"I want to learn about hooks and state management\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/book",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions", "book"]
+            }
+          }
+        },
+        {
+          "name": "Confirm Session",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"meetingLink\": \"https://meet.google.com/abc-defg-hij\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/:sessionId/confirm",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions", ":sessionId", "confirm"],
+              "variable": [
+                {
+                  "key": "sessionId",
+                  "value": "SESSION_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancel Session",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/:sessionId/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions", ":sessionId", "cancel"],
+              "variable": [
+                {
+                  "key": "sessionId",
+                  "value": "SESSION_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Sessions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions"]
+            }
+          }
+        },
+        {
+          "name": "Get Session by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/:sessionId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions", ":sessionId"],
+              "variable": [
+                {
+                  "key": "sessionId",
+                  "value": "SESSION_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mark Session Complete",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/:sessionId/complete",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions", ":sessionId", "complete"],
+              "variable": [
+                {
+                  "key": "sessionId",
+                  "value": "SESSION_ID_HERE"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Submit Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionId\": \"SESSION_ID\",\n  \"rating\": 5,\n  \"comment\": \"Excellent mentor! Very helpful and knowledgeable.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reviews"]
+            }
+          }
+        },
+        {
+          "name": "Get Senior Reviews",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews/senior/:seniorId?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reviews", "senior", ":seniorId"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "seniorId",
+                  "value": "SENIOR_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My Reviews",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews/my-reviews",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reviews", "my-reviews"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

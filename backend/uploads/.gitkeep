@@ -1,0 +1,2 @@
+This directory stores uploaded profile pictures.
+Files are served statically via /uploads/* route.
