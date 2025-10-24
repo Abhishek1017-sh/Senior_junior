@@ -17,6 +17,7 @@ const userRoutes = require('./routes/userRoutes');
 const connectionRoutes = require('./routes/connectionRoutes');
 const sessionRoutes = require('./routes/sessionRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 
 // Initialize express app
 const app = express();
@@ -25,7 +26,8 @@ const server = http.createServer(app);
 // Initialize Socket.io
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    // Allow the common local dev ports (5173 & 5174). If FRONTEND_URL is set, use that.
+    origin: process.env.FRONTEND_URL || ['http://localhost:5173', 'http://localhost:5174'],
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -38,7 +40,8 @@ connectDB();
 app.use(helmet()); // Security headers
 app.use(morgan('dev')); // Logging
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  // Allow the frontend dev server(s). Use FRONTEND_URL env var when provided.
+  origin: process.env.FRONTEND_URL || ['http://localhost:5173', 'http://localhost:5174'],
   credentials: true,
 }));
 app.use(express.json()); // Parse JSON bodies
@@ -77,6 +80,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/connections', connectionRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Initialize Socket.io for chat
 initializeSocket(io);

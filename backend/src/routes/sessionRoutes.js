@@ -13,7 +13,7 @@ const { validateSessionBooking } = require('../middleware/validation');
 const router = express.Router();
 
 // All routes are protected
-router.post('/book', isAuthenticated, validateSessionBooking, bookSession);
+router.post('/book', isAuthenticated, bookSession);
 router.put('/:sessionId/confirm', isAuthenticated, isSenior, confirmSession);
 router.put('/:sessionId/cancel', isAuthenticated, cancelSession);
 router.put('/:sessionId/complete', isAuthenticated, isSenior, completeSession);

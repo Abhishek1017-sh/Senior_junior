@@ -6,13 +6,13 @@ const chatService = {
   // Get user's chat conversations
   getConversations: async () => {
     const response = await axios.get(`${API_BASE_URL}/chat/conversations`);
-    return response.data;
+    return response.data.data || [];
   },
 
   // Get messages for a specific conversation
   getMessages: async (recipientId) => {
     const response = await axios.get(`${API_BASE_URL}/chat/messages/${recipientId}`);
-    return response.data;
+    return response.data.data || [];
   },
 
   // Send a message

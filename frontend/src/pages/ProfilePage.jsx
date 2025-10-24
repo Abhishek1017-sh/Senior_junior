@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { FaStar, FaCalendarAlt, FaMapMarkerAlt, FaBriefcase, FaGraduationCap, FaEnvelope, FaComments } from 'react-icons/fa';
+import { FaStar, FaCalendarAlt, FaMapMarkerAlt, FaBriefcase, FaGraduationCap, FaEnvelope, FaComments, FaUserPlus, FaCheck } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import userService from '../services/userService';
-import BookingModal from '../components/BookingModal';
+import sessionService from '../services/sessionService';
+import SessionBookingModal from '../components/SessionBookingModal';
 import { formatDate } from '../utils/helpers';
 import { USER_ROLES } from '../utils/constants';
 
@@ -13,6 +14,9 @@ const ProfilePage = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState(null);
+  const [bookingStatus, setBookingStatus] = useState(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -33,11 +37,21 @@ const ProfilePage = () => {
     setShowBookingModal(true);
   };
 
-  const handleBookingSubmit = async (bookingData) => {
-    // This would typically call a booking service
-    console.log('Booking session:', bookingData);
-    // Close modal and show success message
-    setShowBookingModal(false);
+  const handleConnect = async () => {
+    setIsConnecting(true);
+    setConnectionStatus(null);
+    try {
+      await userService.sendConnectionRequest(userId);
+      setConnectionStatus('success');
+      // Refresh the user data to show updated connection status
+      const response = await userService.getUserProfile(userId);
+      setUser(response.data);
+    } catch (error) {
+      console.error('Error sending connection request:', error);
+      setConnectionStatus('error');
+    } finally {
+      setIsConnecting(false);
+    }
   };
 
   const renderStars = (rating) => {
@@ -81,6 +95,7 @@ const ProfilePage = () => {
   const isOwnProfile = currentUser?._id === userId;
   const isJunior = currentUser?.role === USER_ROLES.JUNIOR || currentUser?.role === USER_ROLES.BOTH;
   const canBookSession = !isOwnProfile && isJunior && user.role !== USER_ROLES.JUNIOR;
+  const isConnected = currentUser?.connections?.includes(userId);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -122,22 +137,69 @@ const ProfilePage = () => {
                 )}
 
                 {canBookSession && (
-                  <button
-                    onClick={handleBookSession}
-                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-                  >
-                    <FaCalendarAlt className="inline mr-2" />
-                    Book Session
-                  </button>
+                  <div className="flex flex-col items-start">
+                    <button
+                      onClick={handleBookSession}
+                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                    >
+                      <FaCalendarAlt className="inline mr-2" />
+                      Book Session
+                    </button>
+                    {bookingStatus === 'success' && (
+                      <span className="text-green-600 text-sm mt-1 flex items-center">
+                        <FaCheck className="mr-1" />
+                        Session booked! Check "My Sessions"
+                      </span>
+                    )}
+                    {bookingStatus === 'error' && (
+                      <span className="text-red-600 text-sm mt-1">
+                        Failed to book session
+                      </span>
+                    )}
+                  </div>
                 )}
 
-                {!isOwnProfile && (
+                {!isOwnProfile && !isConnected && (user.role === USER_ROLES.SENIOR || user.role === USER_ROLES.BOTH) && (
+                  <div className="flex flex-col items-start">
+                    <button
+                      onClick={handleConnect}
+                      disabled={isConnecting}
+                      className="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 disabled:opacity-50 flex items-center"
+                    >
+                      {isConnecting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Connecting...
+                        </>
+                      ) : (
+                        <>
+                          <FaUserPlus className="inline mr-2" />
+                          Connect
+                        </>
+                      )}
+                    </button>
+                    {connectionStatus === 'success' && (
+                      <span className="text-green-600 text-sm mt-1 flex items-center">
+                        <FaCheck className="mr-1" />
+                        Connection request sent!
+                      </span>
+                    )}
+                    {connectionStatus === 'error' && (
+                      <span className="text-red-600 text-sm mt-1">
+                        Failed to send connection request
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {!isOwnProfile && isConnected && (
                   <Link
                     to={`/chat`}
+                    state={{ recipient: user }} // <-- ADD THIS STATE PROP
                     className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
                   >
-                    <FaComments className="inline mr-2" />
-                    Message
+                  <FaComments className="inline mr-2" />
+                  Message
                   </Link>
                 )}
               </div>
@@ -275,12 +337,15 @@ const ProfilePage = () => {
         </div>
       </div>
 
-      {/* Booking Modal */}
-      <BookingModal
+      {/* Session Booking Modal */}
+      <SessionBookingModal
         isOpen={showBookingModal}
         onClose={() => setShowBookingModal(false)}
-        onSubmit={handleBookingSubmit}
         senior={user}
+        onSuccess={() => {
+          setBookingStatus('success');
+          setShowBookingModal(false);
+        }}
       />
     </div>
   );

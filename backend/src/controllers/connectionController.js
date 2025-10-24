@@ -36,25 +36,28 @@ const sendConnectionRequest = async (req, res, next) => {
       });
     }
 
-    // Check if connection already exists
+    // Check if connection already exists or pending
     const junior = await User.findById(juniorId);
     if (
       junior.connections.includes(seniorId) ||
-      senior.connections.includes(juniorId)
+      senior.connections.includes(juniorId) ||
+      junior.pendingConnections.includes(seniorId) ||
+      senior.pendingConnections.includes(juniorId)
     ) {
       return res.status(400).json({
         success: false,
-        message: 'Connection already exists',
+        message: 'Connection already exists or request pending',
       });
     }
 
-    // Add connection to both users
-    await User.findByIdAndUpdate(juniorId, {
-      $addToSet: { connections: seniorId },
+    // Add to senior's pending connections
+    await User.findByIdAndUpdate(seniorId, {
+      $addToSet: { pendingConnections: juniorId },
     });
 
-    await User.findByIdAndUpdate(seniorId, {
-      $addToSet: { connections: juniorId },
+    // Add to junior's pending connections as well
+    await User.findByIdAndUpdate(juniorId, {
+      $addToSet: { pendingConnections: seniorId },
     });
 
     res.status(200).json({
@@ -95,12 +98,22 @@ const acceptConnectionRequest = async (req, res, next) => {
       });
     }
 
-    // Add connection to both users
+    // Check if request is pending
+    if (!senior.pendingConnections.includes(juniorId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'No pending connection request from this user',
+      });
+    }
+
+    // Remove from pending and add to connections
     await User.findByIdAndUpdate(seniorId, {
+      $pull: { pendingConnections: juniorId },
       $addToSet: { connections: juniorId },
     });
 
     await User.findByIdAndUpdate(juniorId, {
+      $pull: { pendingConnections: seniorId },
       $addToSet: { connections: seniorId },
     });
 
@@ -161,9 +174,99 @@ const removeConnection = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Reject connection request
+ * @route   POST /api/connections/reject/:juniorId
+ * @access  Private (Senior only)
+ */
+const rejectConnectionRequest = async (req, res, next) => {
+  try {
+    const { juniorId } = req.params;
+    const seniorId = req.user._id;
+
+    // Check if junior exists
+    const junior = await User.findById(juniorId);
+
+    if (!junior) {
+      return res.status(404).json({
+        success: false,
+        message: 'Junior not found',
+      });
+    }
+
+    // Check if request is pending
+    const senior = await User.findById(seniorId);
+    if (!senior.pendingConnections.includes(juniorId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'No pending connection request from this user',
+      });
+    }
+
+    // Remove from pending connections
+    await User.findByIdAndUpdate(seniorId, {
+      $pull: { pendingConnections: juniorId },
+    });
+
+    // Also remove from junior's pending connections
+    await User.findByIdAndUpdate(juniorId, {
+      $pull: { pendingConnections: seniorId },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Connection request rejected',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get pending connection requests for logged-in user
+ * @route   GET /api/connections/pending
+ * @access  Private
+ */
+const getPendingConnections = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .populate('pendingConnections', 'username email profile role')
+      .select('pendingConnections');
+
+    res.status(200).json({
+      success: true,
+      data: user.pendingConnections,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get count of pending connection requests for logged-in user
+ * @route   GET /api/connections/pending/count
+ * @access  Private
+ */
+const getPendingConnectionsCount = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .select('pendingConnections');
+
+    res.status(200).json({
+      success: true,
+      count: user.pendingConnections.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   sendConnectionRequest,
   acceptConnectionRequest,
+  rejectConnectionRequest,
   getConnections,
+  getPendingConnections,
+  getPendingConnectionsCount,
   removeConnection,
 };

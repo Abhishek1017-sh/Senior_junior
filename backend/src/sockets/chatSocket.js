@@ -68,10 +68,10 @@ const initializeSocket = (io) => {
           .populate('senderId', 'username profile')
           .populate('receiverId', 'username profile');
 
-        socket.emit('chatHistory', { messages });
+        socket.emit('messageHistory', { messages });
 
         console.log(
-          `User ${socket.user.username} joined room with ${recipient.username}`
+          `User ${socket.user.username} joined room with ${recipient.username}. Sent ${messages.length} messages.`
         );
       } catch (error) {
         console.error('Error joining chat:', error);

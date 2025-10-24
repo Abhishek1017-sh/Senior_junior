@@ -92,6 +92,18 @@ export const AuthProvider = ({ children }) => {
     setUser(prevUser => ({ ...prevUser, ...userData }));
   };
 
+  const refetchUser = async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const response = await axios.get('http://localhost:5000/api/auth/me');
+        setUser(response.data.data);
+      } catch (error) {
+        console.error('Failed to refetch user:', error);
+      }
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -99,6 +111,7 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     updateUser,
+    refetchUser,
     isAuthenticated: !!user,
   };
 

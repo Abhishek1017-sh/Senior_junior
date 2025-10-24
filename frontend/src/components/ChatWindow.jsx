@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { FaPaperPlane, FaSmile } from 'react-icons/fa';
+import { FaPaperPlane, FaSmile, FaArrowLeft } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 
-const ChatWindow = ({ recipient, messages, onSendMessage, isTyping }) => {
+const ChatWindow = ({ recipient, messages, onSendMessage, isTyping, onBack }) => {
+  console.log('ChatWindow rendered with recipient:', recipient, 'messages:', messages);
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef(null);
   const { user } = useAuth();
@@ -12,6 +13,7 @@ const ChatWindow = ({ recipient, messages, onSendMessage, isTyping }) => {
   };
 
   useEffect(() => {
+    console.log('ChatWindow messages updated:', messages);
     scrollToBottom();
   }, [messages]);
 
@@ -34,35 +36,54 @@ const ChatWindow = ({ recipient, messages, onSendMessage, isTyping }) => {
     <div className="flex flex-col h-full bg-white rounded-lg shadow-md">
       {/* Chat Header */}
       <div className="bg-blue-600 text-white p-4 rounded-t-lg">
-        <h3 className="text-lg font-semibold">
-          Chat with {recipient?.profile?.firstName} {recipient?.profile?.lastName}
-        </h3>
-        <p className="text-sm opacity-90">@{recipient?.username}</p>
+        <div className="flex items-center">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="mr-3 md:hidden text-white hover:text-blue-100"
+            >
+              <FaArrowLeft />
+            </button>
+          )}
+          <div>
+            <h3 className="text-lg font-semibold">
+              Chat with {recipient?.profile?.firstName} {recipient?.profile?.lastName}
+            </h3>
+            <p className="text-sm opacity-90">@{recipient?.username}</p>
+          </div>
+        </div>
       </div>
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
-          <div
-            key={message._id}
-            className={`flex ${message.sender === user._id ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                message.sender === user._id
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-900'
-              }`}
-            >
-              <p className="text-sm">{message.content}</p>
-              <p className={`text-xs mt-1 ${
-                message.sender === user._id ? 'text-blue-100' : 'text-gray-500'
-              }`}>
-                {formatTime(message.createdAt)}
-              </p>
+        {messages && messages.length > 0 ? (
+          messages
+            .filter(message => message && message._id) // Filter out undefined messages and messages without _id
+            .map((message) => {
+              // Normalize sender and user ids to strings for reliable comparison
+              const senderId = message?.senderId?._id || message?.senderId?.id || message?.senderId || message?.sender;
+              const userId = user?._id || user?.id;
+              const isOwn = userId && senderId && String(senderId) === String(userId);
+
+              return (
+                <div key={message._id} className={`flex w-full ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[70%] px-4 py-2 rounded-lg ${isOwn ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-900'}`}>
+                    <p className="text-sm">{message.message || message.content}</p>
+                    <p className={`text-xs mt-1 ${isOwn ? 'text-blue-100' : 'text-gray-500'}`}>
+                      {message.timestamp ? formatTime(message.timestamp) : formatTime(message.createdAt)}
+                    </p>
+                  </div>
+                </div>
+              );
+            })
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center text-gray-500">
+              <FaPaperPlane className="text-4xl mx-auto mb-2 opacity-50" />
+              <p>No messages yet. Start the conversation!</p>
             </div>
           </div>
-        ))}
+        )}
 
         {isTyping && (
           <div className="flex justify-start">

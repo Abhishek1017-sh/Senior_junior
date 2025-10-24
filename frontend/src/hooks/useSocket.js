@@ -1,13 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
 
-const useSocket = () => {
+const useSocket = (initialUnreadCounts = new Map()) => {
   const { user, isAuthenticated } = useAuth();
   const socketRef = useRef(null);
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [unreadCounts, setUnreadCounts] = useState(initialUnreadCounts);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -23,8 +24,8 @@ const useSocket = () => {
 
       // Connection events
       socket.on('connect', () => {
+        console.log('Socket connected successfully!');
         setIsConnected(true);
-        console.log('Connected to chat server');
       });
 
       socket.on('disconnect', () => {
@@ -33,12 +34,25 @@ const useSocket = () => {
       });
 
       // Message events
-      socket.on('receiveMessage', (message) => {
-        setMessages(prev => [...prev, message]);
+      socket.on('newMessage', (message) => {
+        if (message && message._id) {
+          // If this message is not from the current conversation, increment unread count
+          setUnreadCounts(prev => {
+            const newCounts = new Map(prev);
+            const senderId = message.senderId._id;
+            // Only increment if message is not from current user and not in current conversation
+            if (senderId !== user._id) {
+              newCounts.set(senderId, (newCounts.get(senderId) || 0) + 1);
+            }
+            return newCounts;
+          });
+          setMessages(prev => [...prev, message]);
+        }
       });
 
-      socket.on('messageHistory', (history) => {
-        setMessages(history);
+      socket.on('messageHistory', (data) => {
+        console.log('Received messageHistory:', data);
+        setMessages(data.messages || []);
       });
 
       // User presence events
@@ -77,9 +91,20 @@ const useSocket = () => {
   }, [isAuthenticated, user]);
 
   const joinChat = (recipientId) => {
+    console.log('joinChat called with recipientId:', recipientId, 'isConnected:', isConnected);
     if (socketRef.current && isConnected) {
+      // Clear messages immediately when joining a new chat
+      setMessages([]);
+      // Mark messages as read for this conversation
+      setUnreadCounts(prev => {
+        const newCounts = new Map(prev);
+        newCounts.set(recipientId, 0);
+        return newCounts;
+      });
       socketRef.current.emit('join', { recipientId });
-      setMessages([]); // Clear messages when joining new chat
+      console.log('Emitted join event for recipientId:', recipientId);
+    } else {
+      console.error('Cannot join chat: socket not connected or not available');
     }
   };
 
@@ -87,7 +112,7 @@ const useSocket = () => {
     if (socketRef.current && isConnected) {
       socketRef.current.emit('sendMessage', {
         recipientId,
-        content,
+        message: content,
       });
     }
   };
@@ -104,15 +129,25 @@ const useSocket = () => {
     }
   };
 
+  const markMessagesAsRead = useCallback((senderId) => {
+    setUnreadCounts(prev => {
+      const newCounts = new Map(prev);
+      newCounts.set(senderId, 0);
+      return newCounts;
+    });
+  }, []);
+
   return {
     socket: socketRef.current,
     isConnected,
     messages,
     onlineUsers,
+    unreadCounts,
     joinChat,
     sendMessage,
     startTyping,
     stopTyping,
+    markMessagesAsRead,
   };
 };
 

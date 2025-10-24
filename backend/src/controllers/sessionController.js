@@ -1,5 +1,6 @@
 const Session = require('../models/Session');
 const User = require('../models/User');
+const mongoose = require('mongoose');
 
 /**
  * @desc    Book a session with a senior
@@ -20,6 +21,38 @@ const bookSession = async (req, res, next) => {
       });
     }
 
+    // Validate ObjectIds
+    if (!mongoose.Types.ObjectId.isValid(seniorId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid senior ID format',
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(juniorId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid user ID format',
+      });
+    }
+
+    // Validate duration
+    if (isNaN(duration) || duration < 15) {
+      return res.status(400).json({
+        success: false,
+        message: 'Duration must be a number and at least 15 minutes',
+      });
+    }
+
+    // Validate scheduled time
+    const scheduledDate = new Date(scheduledTime);
+    if (isNaN(scheduledDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid scheduled time format',
+      });
+    }
+
     // Check if senior exists
     const senior = await User.findById(seniorId);
 
@@ -35,6 +68,14 @@ const bookSession = async (req, res, next) => {
       return res.status(400).json({
         success: false,
         message: 'This user is not a senior',
+      });
+    }
+
+    // Check if users are connected
+    if (!senior.connections.some(conn => conn.toString() === juniorId.toString())) {
+      return res.status(400).json({
+        success: false,
+        message: 'You must be connected to this senior to book a session',
       });
     }
 

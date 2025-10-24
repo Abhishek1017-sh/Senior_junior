@@ -67,12 +67,12 @@ const MySessionsPage = () => {
 
     if (activeTab === 'upcoming') {
       return sessions.filter(session =>
-        new Date(session.scheduledDate) > now &&
+        new Date(session.scheduledTime) > now &&
         session.status !== SESSION_STATUS.CANCELLED
       );
     } else if (activeTab === 'past') {
       return sessions.filter(session =>
-        new Date(session.scheduledDate) <= now ||
+        new Date(session.scheduledTime) <= now ||
         session.status === SESSION_STATUS.COMPLETED ||
         session.status === SESSION_STATUS.CANCELLED
       );

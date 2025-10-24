@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ChatProvider } from './context/ChatContext';
+import { NotificationProvider } from './context/NotificationContext';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -13,16 +15,19 @@ import ProfilePage from './pages/ProfilePage';
 import EditProfilePage from './pages/EditProfilePage';
 import MySessionsPage from './pages/MySessionsPage';
 import ChatPage from './pages/ChatPage';
+import ConnectionsPage from './pages/ConnectionsPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <div className="min-h-screen bg-gray-50">
-          <Navbar />
-          <main className="container mx-auto px-4 py-8">
-            <Routes>
+      <NotificationProvider>
+        <ChatProvider>
+          <Router>
+          <div className="min-h-screen bg-gray-50">
+            <Navbar />
+            <main className="container mx-auto px-4 py-8">
+              <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
@@ -40,6 +45,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <FindSeniorsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/connections"
+                element={
+                  <ProtectedRoute>
+                    <ConnectionsPage />
                   </ProtectedRoute>
                 }
               />
@@ -72,6 +85,8 @@ function App() {
           </main>
         </div>
       </Router>
+        </ChatProvider>
+      </NotificationProvider>
     </AuthProvider>
   );
 }

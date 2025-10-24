@@ -1,9 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FaUser, FaSignOutAlt, FaHome, FaUsers, FaCalendarAlt, FaComments } from 'react-icons/fa';
+import { useChat } from '../context/ChatContext';
+import { useNotifications } from '../context/NotificationContext';
+import { FaUser, FaSignOutAlt, FaHome, FaUsers, FaCalendarAlt, FaComments, FaUserFriends } from 'react-icons/fa';
 
 const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuth();
+  const { totalUnreadCount } = useChat();
+  const { pendingConnectionsCount, pendingSessionsCount } = useNotifications();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -39,19 +43,42 @@ const Navbar = () => {
                 </Link>
 
                 <Link
+                  to="/connections"
+                  className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 relative"
+                >
+                  <FaUserFriends />
+                  <span>Connections</span>
+                  {pendingConnectionsCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {pendingConnectionsCount > 99 ? '99+' : pendingConnectionsCount}
+                    </span>
+                  )}
+                </Link>
+
+                <Link
                   to="/my-sessions"
-                  className="flex items-center space-x-1 text-gray-700 hover:text-blue-600"
+                  className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 relative"
                 >
                   <FaCalendarAlt />
                   <span>My Sessions</span>
+                  {pendingSessionsCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {pendingSessionsCount > 99 ? '99+' : pendingSessionsCount}
+                    </span>
+                  )}
                 </Link>
 
                 <Link
                   to="/chat"
-                  className="flex items-center space-x-1 text-gray-700 hover:text-blue-600"
+                  className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 relative"
                 >
                   <FaComments />
                   <span>Chat</span>
+                  {totalUnreadCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
+                    </span>
+                  )}
                 </Link>
 
                 <div className="relative group">

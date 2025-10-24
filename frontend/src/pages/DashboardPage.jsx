@@ -20,22 +20,23 @@ const DashboardPage = () => {
     const fetchDashboardData = async () => {
       try {
         const response = await sessionService.getUserSessions();
-        setSessions(response.data); // <-- Extract the 'data' property
+        const userSessions = response.data; // The array of sessions
+        setSessions(userSessions);
 
-        // Calculate stats
+        // Calculate stats using the correct variable 'userSessions'
         const now = new Date();
-        const upcoming = sessionsData.filter(session =>
-          new Date(session.scheduledDate) > now && session.status === 'confirmed'
+        const upcoming = userSessions.filter(session =>
+          new Date(session.scheduledTime) > now && session.status === 'confirmed'
         );
-        const completed = sessionsData.filter(session =>
+        const completed = userSessions.filter(session =>
           session.status === 'completed'
         );
 
         setStats({
-          totalSessions: sessionsData.length,
+          totalSessions: userSessions.length,
           upcomingSessions: upcoming.length,
           completedSessions: completed.length,
-          averageRating: user?.averageRating || 0,
+          averageRating: user?.seniorProfile?.averageRating || 0,
         });
       } catch (error) {
         console.error('Error fetching dashboard data:', error);

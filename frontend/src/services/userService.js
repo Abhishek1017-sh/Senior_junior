@@ -27,24 +27,36 @@ const userService = {
   // Get user connections
   getConnections: async () => {
     const response = await axios.get(`${API_BASE_URL}/connections`);
-    return response.data;
+    return response.data.data || [];
+  },
+
+  // Get pending connection requests
+  getPendingConnections: async () => {
+    const response = await axios.get(`${API_BASE_URL}/connections/pending`);
+    return response.data.data || [];
   },
 
   // Send connection request
   sendConnectionRequest: async (userId) => {
-    const response = await axios.post(`${API_BASE_URL}/connections`, { userId });
+    const response = await axios.post(`${API_BASE_URL}/connections/request/${userId}`);
     return response.data;
   },
 
   // Accept connection request
-  acceptConnection: async (connectionId) => {
-    const response = await axios.put(`${API_BASE_URL}/connections/${connectionId}/accept`);
+  acceptConnectionRequest: async (juniorId) => {
+    const response = await axios.post(`${API_BASE_URL}/connections/accept/${juniorId}`);
     return response.data;
   },
 
   // Reject connection request
-  rejectConnection: async (connectionId) => {
-    const response = await axios.put(`${API_BASE_URL}/connections/${connectionId}/reject`);
+  rejectConnectionRequest: async (juniorId) => {
+    const response = await axios.post(`${API_BASE_URL}/connections/reject/${juniorId}`);
+    return response.data;
+  },
+
+  // Remove connection
+  removeConnection: async (connectionId) => {
+    const response = await axios.delete(`${API_BASE_URL}/connections/${connectionId}`);
     return response.data;
   },
 };

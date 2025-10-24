@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { FaSearch, FaFilter } from 'react-icons/fa';
 import SeniorCard from '../components/SeniorCard';
 import userService from '../services/userService';
+import { useAuth } from '../context/AuthContext';
 import { SKILL_CATEGORIES } from '../utils/constants';
 import { debounce } from '../utils/helpers';
 
 const FindSeniorsPage = () => {
+  const { user, updateUser, refetchUser } = useAuth();
   const [seniors, setSeniors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -13,6 +15,24 @@ const FindSeniorsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      fetchSeniors(currentPage, searchQuery, selectedSkills);
+    }
+  }, [user, currentPage, searchQuery, selectedSkills]);
+
+  // Refetch user data when page becomes visible (in case connections were updated)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refetchUser(); // Refetch user data to get updated connections
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [refetchUser]); // Refetch when user or filters change
 
   const fetchSeniors = async (page = 1, query = '', skills = []) => {
     try {
@@ -165,7 +185,13 @@ const FindSeniorsPage = () => {
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {seniors.map((senior) => (
-                <SeniorCard key={senior._id} senior={senior} />
+                <SeniorCard 
+                  key={senior._id} 
+                  senior={senior} 
+                  user={user}
+                  onConnectionUpdate={() => fetchSeniors(currentPage, searchQuery, selectedSkills)}
+                  onUserUpdate={updateUser}
+                />
               ))}
             </div>
 
