@@ -132,5 +132,5 @@ const Navbar = () => {
     </nav>
   );
 };
-
+//EXPORT
 export default Navbar;
