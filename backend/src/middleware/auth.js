@@ -33,7 +33,7 @@ const isAuthenticated = async (req, res, next) => {
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'User not found. Token invalid.',
+        message: 'User not founds. Token invalid.',
       });
     }
 
