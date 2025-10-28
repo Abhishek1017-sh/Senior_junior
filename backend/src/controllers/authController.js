@@ -84,7 +84,6 @@ const login = async (req, res, next) => {
       });
     }
 
-    // Generate token
     const token = generateToken(user._id);
 
     res.status(200).json({
