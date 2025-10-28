@@ -4,6 +4,7 @@ const {
   getSeniorReviews,
   getMyReviews,
 } = require('../controllers/reviewController');
+//for authentication
 const { isAuthenticated } = require('../middleware/auth');
 const { validateReview } = require('../middleware/validation');
 
