@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { FaGoogle, FaGithub } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+/* Updated comment: Frontend login page improved */
+
 
 const LoginPage = () => {
   const [loading, setLoading] = useState(false);
