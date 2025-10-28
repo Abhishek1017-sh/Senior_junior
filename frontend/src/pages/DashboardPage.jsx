@@ -23,7 +23,6 @@ const DashboardPage = () => {
         const userSessions = response.data; // The array of sessions
         setSessions(userSessions);
 
-        // Calculate stats using the correct variable 'userSessions'
         const now = new Date();
         const upcoming = userSessions.filter(session =>
           new Date(session.scheduledTime) > now && session.status === 'confirmed'
