@@ -30,7 +30,7 @@ const submitReview = async (req, res, next) => {
       });
     }
 
-    // Check if session is completed
+ 
     if (session.status !== 'completed') {
       return res.status(400).json({
         success: false,
