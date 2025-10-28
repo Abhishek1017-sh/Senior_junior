@@ -22,7 +22,7 @@ const EditProfilePage = () => {
 
   useEffect(() => {
     if (user) {
-      // Pre-fill form with current user data
+      // Pre-fill form with current user data firstly
       setValue('firstName', user.profile?.firstName || '');
       setValue('lastName', user.profile?.lastName || '');
       setValue('location', user.profile?.location || '');
