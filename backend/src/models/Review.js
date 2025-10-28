@@ -33,7 +33,7 @@ const reviewSchema = new mongoose.Schema({
   },
 });
 
-// Ensure one review per session per reviewer
+// Ensure one review per session per reviewers
 reviewSchema.index({ sessionId: 1, reviewerId: 1 }, { unique: true });
 
 // Index for efficient querying of reviews by reviewee
