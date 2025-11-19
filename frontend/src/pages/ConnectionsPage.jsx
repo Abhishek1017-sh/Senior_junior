@@ -3,9 +3,10 @@ import { FaUserCheck, FaUserTimes, FaUserPlus } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
 import userService from '../services/userService';
+import { Link } from 'react-router-dom';
 
 const ConnectionsPage = () => {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, refetchUser } = useAuth();
   const { refreshNotifications } = useNotifications();
   const [connections, setConnections] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -36,11 +37,15 @@ const ConnectionsPage = () => {
     setActionLoading(juniorId);
     try {
       await userService.acceptConnectionRequest(juniorId);
-      // Update local user connections
+      
+      // FIX: Update local state and refresh from server
       updateUser({
         connections: [...(user.connections || []), juniorId],
-        pendingConnections: (user.pendingConnections || []).filter(id => id !== juniorId)
+        pendingConnections: (user.pendingConnections || []).filter(id => id.toString() !== juniorId.toString())
       });
+      
+      // Refetch all data from server to ensure consistency
+      await refetchUser();
       await fetchData();
       refreshNotifications();
     } catch (error) {
@@ -55,10 +60,14 @@ const ConnectionsPage = () => {
     setActionLoading(juniorId);
     try {
       await userService.rejectConnectionRequest(juniorId);
-      // Update local user pending connections
+      
+      // FIX: Update local state and refresh from server
       updateUser({
-        pendingConnections: (user.pendingConnections || []).filter(id => id !== juniorId)
+        pendingConnections: (user.pendingConnections || []).filter(id => id.toString() !== juniorId.toString())
       });
+      
+      // Refetch all data from server to ensure consistency
+      await refetchUser();
       await fetchData();
       refreshNotifications();
     } catch (error) {
@@ -73,6 +82,7 @@ const ConnectionsPage = () => {
     setActionLoading(connectionId);
     try {
       await userService.removeConnection(connectionId);
+      await refetchUser();
       await fetchData();
     } catch (error) {
       console.error('Error removing connection:', error);
@@ -174,12 +184,13 @@ const ConnectionsPage = () => {
                   </div>
 
                   <div className="flex space-x-2">
-                    <button
-                      onClick={() => window.location.href = `/chat?recipient=${connection._id}`}
+                    <Link
+                      to="/chat"
+                      state={{ recipient: connection }}
                       className="px-3 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
                     >
                       Message
-                    </button>
+                    </Link>
                     <button
                       onClick={() => handleRemoveConnection(connection._id)}
                       disabled={actionLoading === connection._id}

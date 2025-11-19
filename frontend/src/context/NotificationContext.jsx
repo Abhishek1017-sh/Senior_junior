@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from './AuthContext';
 
@@ -17,7 +17,8 @@ export const NotificationProvider = ({ children }) => {
   const [pendingConnectionsCount, setPendingConnectionsCount] = useState(0);
   const [pendingSessionsCount, setPendingSessionsCount] = useState(0);
 
-  const fetchNotificationCounts = async () => {
+  // FIX BUG 3: Use useCallback to prevent function recreation
+  const fetchNotificationCounts = useCallback(async () => {
     if (!isAuthenticated) return;
 
     try {
@@ -31,20 +32,21 @@ export const NotificationProvider = ({ children }) => {
     } catch (error) {
       console.error('Error fetching notification counts:', error);
     }
-  };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchNotificationCounts();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, fetchNotificationCounts]);
 
-  const value = {
+  // FIX BUG 3: Use useMemo to prevent context value recreation
+  const value = useMemo(() => ({
     pendingConnectionsCount,
     pendingSessionsCount,
     totalNotificationsCount: pendingConnectionsCount + pendingSessionsCount,
     refreshNotifications: fetchNotificationCounts,
-  };
+  }), [pendingConnectionsCount, pendingSessionsCount, fetchNotificationCounts]);
 
   return (
     <NotificationContext.Provider value={value}>

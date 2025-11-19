@@ -18,76 +18,82 @@ import ChatPage from './pages/ChatPage';
 import ConnectionsPage from './pages/ConnectionsPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 
+function AppRoutes() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <main className="container mx-auto px-4 py-8">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/find-seniors"
+            element={
+              <ProtectedRoute>
+                <FindSeniorsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/connections"
+            element={
+              <ProtectedRoute>
+                <ConnectionsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/profile/:userId" element={<ProfilePage />} />
+          <Route
+            path="/edit-profile"
+            element={
+              <ProtectedRoute>
+                <EditProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-sessions"
+            element={
+              <ProtectedRoute>
+                <MySessionsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <ChatPage />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </main>
+    </div>
+  );
+}
+
 function App() {
   return (
-    <AuthProvider>
-      <NotificationProvider>
-        <ChatProvider>
-          <Router>
-          <div className="min-h-screen bg-gray-50">
-            <Navbar />
-            <main className="container mx-auto px-4 py-8">
-              <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-               <Route path="/auth/callback" element={<AuthCallbackPage />} />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <DashboardPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/find-seniors"
-                element={
-                  <ProtectedRoute>
-                    <FindSeniorsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/connections"
-                element={
-                  <ProtectedRoute>
-                    <ConnectionsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/profile/:userId" element={<ProfilePage />} />
-              <Route
-                path="/edit-profile"
-                element={
-                  <ProtectedRoute>
-                    <EditProfilePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/my-sessions"
-                element={
-                  <ProtectedRoute>
-                    <MySessionsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/chat"
-                element={
-                  <ProtectedRoute>
-                    <ChatPage />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </main>
-        </div>
-      </Router>
-        </ChatProvider>
-      </NotificationProvider>
-    </AuthProvider>
+    <Router>
+      <AuthProvider>
+        <NotificationProvider>
+          <ChatProvider>
+            <AppRoutes />
+          </ChatProvider>
+        </NotificationProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 

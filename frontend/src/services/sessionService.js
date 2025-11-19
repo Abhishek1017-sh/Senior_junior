@@ -16,8 +16,11 @@ const sessionService = {
   },
 
   // Cancel a session
-  cancelSession: async (sessionId) => {
-    const response = await axios.put(`${API_BASE_URL}/sessions/${sessionId}/cancel`);
+  cancelSession: async (sessionId, data = {}) => {
+    const response = await axios.put(
+      `${API_BASE_URL}/sessions/${sessionId}/cancel`,
+      { reason: data.reason || '' } // Explicitly pass reason
+    );
     return response.data;
   },
 

@@ -8,69 +8,57 @@ const User = require('../models/User');
 const sendConnectionRequest = async (req, res, next) => {
   try {
     const { seniorId } = req.params;
-    const juniorId = req.user._id;
 
-    // Check if senior exists
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ success: false, message: 'Not authenticated' });
+    }
+
+    const juniorId = String(req.user._id || '');
+    if (!seniorId) {
+      return res.status(400).json({ success: false, message: 'Senior ID missing' });
+    }
+
+    if (seniorId === juniorId) {
+      return res.status(400).json({ success: false, message: 'You cannot connect with yourself' });
+    }
+
     const senior = await User.findById(seniorId);
-
     if (!senior) {
-      return res.status(404).json({
-        success: false,
-        message: 'Senior not found',
-      });
+      return res.status(404).json({ success: false, message: 'Senior not found' });
     }
 
-    // Check if user is trying to connect with themselves
-    if (seniorId === juniorId.toString()) {
-      return res.status(400).json({
-        success: false,
-        message: 'You cannot connect with yourself',
-      });
-    }
-
-    // Check if senior has senior or both role
     if (senior.role !== 'senior' && senior.role !== 'both') {
-      return res.status(400).json({
-        success: false,
-        message: 'This user is not a senior',
-      });
+      return res.status(400).json({ success: false, message: 'This user is not a senior' });
     }
 
-    // Check if connection already exists or pending
     const junior = await User.findById(juniorId);
-    if (
-      junior.connections.includes(seniorId) ||
-      senior.connections.includes(juniorId) ||
-      junior.pendingConnections.includes(seniorId) ||
-      senior.pendingConnections.includes(juniorId)
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: 'Connection already exists or request pending',
-      });
+    if (!junior) {
+      return res.status(404).json({ success: false, message: 'Junior not found' });
     }
 
-    // Add to senior's pending connections
-    await User.findByIdAndUpdate(seniorId, {
-      $addToSet: { pendingConnections: juniorId },
-    });
+    // use string comparison to be safe
+    const seniorConnected = (junior.connections || []).some(c => String(c) === String(seniorId));
+    const juniorConnected = (senior.connections || []).some(c => String(c) === String(juniorId));
+    if (seniorConnected || juniorConnected) {
+      return res.status(400).json({ success: false, message: 'Connection already exists' });
+    }
 
-    // Add to junior's pending connections as well
-    await User.findByIdAndUpdate(juniorId, {
-      $addToSet: { pendingConnections: seniorId },
-    });
+    const pendingExists = (senior.pendingConnections || []).some(c => String(c) === String(juniorId));
+    if (pendingExists) {
+      return res.status(400).json({ success: false, message: 'Connection request already sent' });
+    }
 
-    res.status(200).json({
-      success: true,
-      message: 'Connection request sent successfully',
-    });
+    await User.findByIdAndUpdate(seniorId, { $addToSet: { pendingConnections: juniorId } });
+
+    res.status(200).json({ success: true, message: 'Connection request sent successfully' });
   } catch (error) {
+    console.error('Error in sendConnectionRequest:', error);
     next(error);
   }
 };
 
 /**
- * @desc    Accept connection request (same as send in this simplified version)
+ * @desc    Accept connection request (Senior only)
  * @route   POST /api/connections/accept/:juniorId
  * @access  Private (Senior only)
  */
@@ -79,9 +67,16 @@ const acceptConnectionRequest = async (req, res, next) => {
     const { juniorId } = req.params;
     const seniorId = req.user._id;
 
+    // FIX: Check that senior is not the junior (can't accept own request)
+    if (juniorId === seniorId.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot accept your own connection request',
+      });
+    }
+
     // Check if junior exists
     const junior = await User.findById(juniorId);
-
     if (!junior) {
       return res.status(404).json({
         success: false,
@@ -98,7 +93,7 @@ const acceptConnectionRequest = async (req, res, next) => {
       });
     }
 
-    // Check if request is pending
+    // FIX: Check that SENIOR has the junior's request in THEIR pending list
     if (!senior.pendingConnections.includes(juniorId)) {
       return res.status(400).json({
         success: false,
@@ -106,14 +101,14 @@ const acceptConnectionRequest = async (req, res, next) => {
       });
     }
 
-    // Remove from pending and add to connections
+    // Remove from senior's pending and add to both connections
     await User.findByIdAndUpdate(seniorId, {
       $pull: { pendingConnections: juniorId },
       $addToSet: { connections: juniorId },
     });
 
+    // FIX: Add to junior's connections as well (symmetric connection)
     await User.findByIdAndUpdate(juniorId, {
-      $pull: { pendingConnections: seniorId },
       $addToSet: { connections: seniorId },
     });
 
@@ -184,6 +179,14 @@ const rejectConnectionRequest = async (req, res, next) => {
     const { juniorId } = req.params;
     const seniorId = req.user._id;
 
+    // FIX: Check that senior is not the junior
+    if (juniorId === seniorId.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot reject your own connection request',
+      });
+    }
+
     // Check if junior exists
     const junior = await User.findById(juniorId);
 
@@ -203,14 +206,10 @@ const rejectConnectionRequest = async (req, res, next) => {
       });
     }
 
-    // Remove from pending connections
+    // FIX: Only remove from SENIOR's pending connections
+    // Junior never had it in their list
     await User.findByIdAndUpdate(seniorId, {
       $pull: { pendingConnections: juniorId },
-    });
-
-    // Also remove from junior's pending connections
-    await User.findByIdAndUpdate(juniorId, {
-      $pull: { pendingConnections: seniorId },
     });
 
     res.status(200).json({

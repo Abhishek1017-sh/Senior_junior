@@ -1,14 +1,14 @@
 const { body, validationResult } = require('express-validator');
 
-// Middleware to check validation results
-const validate = (req, res, next) => {
+// Validation middleware handler
+const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({
       success: false,
       message: 'Validation failed',
       errors: errors.array().map((err) => ({
-        field: err.path,
+        field: err.param,
         message: err.msg,
       })),
     });
@@ -36,7 +36,7 @@ const validateRegister = [
     .optional()
     .isIn(['junior', 'senior', 'both'])
     .withMessage('Role must be junior, senior, or both'),
-  validate,
+  handleValidationErrors,
 ];
 
 // Validation rules for user login
@@ -49,7 +49,7 @@ const validateLogin = [
   body('password')
     .notEmpty()
     .withMessage('Password is required'),
-  validate,
+  handleValidationErrors,
 ];
 
 // Validation rules for session booking
@@ -60,11 +60,10 @@ const validateSessionBooking = [
     .isMongoId()
     .withMessage('Invalid senior ID'),
   body('topic')
-    .trim()
     .notEmpty()
     .withMessage('Topic is required')
-    .isLength({ max: 200 })
-    .withMessage('Topic must not exceed 200 characters'),
+    .isLength({ min: 3 })
+    .withMessage('Topic must be at least 3 characters long'),
   body('scheduledTime')
     .notEmpty()
     .withMessage('Scheduled time is required')
@@ -77,14 +76,16 @@ const validateSessionBooking = [
       return true;
     }),
   body('duration')
-    .isInt({ min: 15, max: 480 })
-    .withMessage('Duration must be between 15 and 480 minutes'),
+    .notEmpty()
+    .withMessage('Duration is required')
+    .isInt({ min: 15 })
+    .withMessage('Duration must be at least 15 minutes'),
   body('meetingLink')
     .optional()
     .trim()
     .isURL()
     .withMessage('Meeting link must be a valid URL'),
-  validate,
+  handleValidationErrors,
 ];
 
 // Validation rules for review submission
@@ -102,7 +103,7 @@ const validateReview = [
     .trim()
     .isLength({ max: 1000 })
     .withMessage('Comment must not exceed 1000 characters'),
-  validate,
+  handleValidationErrors,
 ];
 
 // Validation rules for profile update
@@ -110,13 +111,13 @@ const validateProfileUpdate = [
   body('profile.firstName')
     .optional()
     .trim()
-    .isLength({ max: 50 })
-    .withMessage('First name must not exceed 50 characters'),
+    .isLength({ min: 2 })
+    .withMessage('First name must be at least 2 characters long'),
   body('profile.lastName')
     .optional()
     .trim()
-    .isLength({ max: 50 })
-    .withMessage('Last name must not exceed 50 characters'),
+    .isLength({ min: 2 })
+    .withMessage('Last name must be at least 2 characters long'),
   body('profile.bio')
     .optional()
     .trim()
@@ -130,11 +131,10 @@ const validateProfileUpdate = [
     .optional()
     .isFloat({ min: 0 })
     .withMessage('Hourly rate must be a positive number'),
-  validate,
+  handleValidationErrors,
 ];
 
 module.exports = {
-  validate,
   validateRegister,
   validateLogin,
   validateSessionBooking,

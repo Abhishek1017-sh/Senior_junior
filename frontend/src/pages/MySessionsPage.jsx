@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { FaCalendarAlt, FaClock, FaCheck, FaTimes, FaStar } from 'react-icons/fa';
+import { FaCalendarAlt, FaClock, FaCheck, FaTimes, FaStar, FaComment } from 'react-icons/fa';
 import sessionService from '../services/sessionService';
 import reviewService from '../services/reviewService';
 import ReviewModal from '../components/ReviewModal';
+import CancelSessionModal from '../components/CancelSessionModal';
 import { formatDateTime } from '../utils/helpers';
 import { SESSION_STATUS } from '../utils/constants';
 
@@ -11,6 +12,7 @@ const MySessionsPage = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('upcoming');
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false); // FIX: Add cancel modal state
   const [selectedSession, setSelectedSession] = useState(null);
 
   useEffect(() => {
@@ -28,14 +30,22 @@ const MySessionsPage = () => {
     }
   };
 
+  // FIX: Update cancel session handler
   const handleCancelSession = async (sessionId) => {
-    if (window.confirm('Are you sure you want to cancel this session?')) {
-      try {
-        await sessionService.cancelSession(sessionId);
-        fetchSessions(); // Refresh sessions
-      } catch (error) {
-        console.error('Error canceling session:', error);
-      }
+    const session = sessions.find(s => s._id === sessionId);
+    setSelectedSession(session);
+    setCancelModalOpen(true);
+  };
+
+  // FIX: Handle cancel session with reason
+  const handleConfirmCancel = async (reason) => {
+    try {
+      await sessionService.cancelSession(selectedSession._id, { reason });
+      fetchSessions(); // Refresh sessions to show updated data with reason
+      setCancelModalOpen(false);
+      setSelectedSession(null);
+    } catch (error) {
+      console.error('Error cancelling session:', error);
     }
   };
 
@@ -153,21 +163,21 @@ const MySessionsPage = () => {
                     <div className="flex-1">
                       <div className="flex items-start space-x-4">
                         <img
-                          src={session.senior?.profile?.profilePicture || '/default-avatar.png'}
-                          alt={session.senior?.profile?.firstName}
+                          src={session.seniorId?.profile?.profilePicture || '/default-avatar.png'}
+                          alt={session.seniorId?.profile?.firstName}
                           className="w-12 h-12 rounded-full object-cover"
                         />
 
                         <div className="flex-1">
                           <h3 className="text-lg font-semibold text-gray-900">
-                            Session with {session.senior?.profile?.firstName} {session.senior?.profile?.lastName}
+                            Session with {session.seniorId?.profile?.firstName} {session.seniorId?.profile?.lastName}
                           </h3>
                           <p className="text-gray-600">{session.topic}</p>
 
                           <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
                             <div className="flex items-center">
                               <FaCalendarAlt className="mr-1" />
-                              {formatDateTime(session.scheduledDate)}
+                              {formatDateTime(session.scheduledTime)}
                             </div>
                             <div className="flex items-center">
                               <FaClock className="mr-1" />
@@ -175,10 +185,27 @@ const MySessionsPage = () => {
                             </div>
                           </div>
 
-                          {session.description && (
+                          {session.notes && (
                             <p className="text-gray-600 mt-2 text-sm">
-                              {session.description}
+                              {session.notes}
                             </p>
+                          )}
+
+                          {/* FIX: Show cancellation reason if session is cancelled */}
+                          {session.status === SESSION_STATUS.CANCELLED && session.cancellationReason && (
+                            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
+                              <div className="flex items-start space-x-2">
+                                <FaComment className="text-red-600 mt-1 flex-shrink-0" />
+                                <div>
+                                  <p className="text-sm font-medium text-red-900">
+                                    Cancellation Reason ({session.cancelledBy === 'senior' ? 'Senior' : 'You'})
+                                  </p>
+                                  <p className="text-sm text-red-700 mt-1">
+                                    {session.cancellationReason}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -206,6 +233,16 @@ const MySessionsPage = () => {
                             <span>Cancel</span>
                           </button>
                         </div>
+                      )}
+
+                      {activeTab === 'upcoming' && session.status === SESSION_STATUS.CONFIRMED && (
+                        <button
+                          onClick={() => handleCancelSession(session._id)}
+                          className="flex items-center space-x-1 bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 text-sm"
+                        >
+                          <FaTimes />
+                          <span>Cancel</span>
+                        </button>
                       )}
 
                       {activeTab === 'past' && session.status === SESSION_STATUS.COMPLETED && (
@@ -238,6 +275,17 @@ const MySessionsPage = () => {
           )}
         </div>
       </div>
+
+      {/* Cancel Session Modal */}
+      <CancelSessionModal
+        isOpen={cancelModalOpen}
+        onClose={() => {
+          setCancelModalOpen(false);
+          setSelectedSession(null);
+        }}
+        onConfirm={handleConfirmCancel}
+        sessionTitle={selectedSession ? `${selectedSession.topic} with ${selectedSession.seniorId?.profile?.firstName}` : ''}
+      />
 
       {/* Review Modal */}
       <ReviewModal

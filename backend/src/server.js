@@ -10,6 +10,7 @@ const passport = require('./config/passport');
 const connectDB = require('./config/db');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const initializeSocket = require('./sockets/chatSocket');
+const initializeSessionSocket = require('./sockets/sessionSocket');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
@@ -84,6 +85,9 @@ app.use('/api/chat', chatRoutes);
 
 // Initialize Socket.io for chat
 initializeSocket(io);
+
+// FIX: Initialize Socket.io for session notifications
+initializeSessionSocket(io);
 
 // Error handling middleware (must be last)
 app.use(notFound);

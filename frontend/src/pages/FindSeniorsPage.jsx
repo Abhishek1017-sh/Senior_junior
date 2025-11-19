@@ -188,9 +188,10 @@ const FindSeniorsPage = () => {
                 <SeniorCard 
                   key={senior._id} 
                   senior={senior} 
-                  user={user}
-                  onConnectionUpdate={() => fetchSeniors(currentPage, searchQuery, selectedSkills)}
-                  onUserUpdate={updateUser}
+                  onConnectionUpdate={() => {
+                    fetchSeniors(currentPage, searchQuery, selectedSkills);
+                    refetchUser();
+                  }}
                 />
               ))}
             </div>

@@ -4,44 +4,54 @@ const sessionSchema = new mongoose.Schema({
   seniorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: [true, 'Senior ID is required'],
+    required: true,
   },
   juniorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: [true, 'Junior ID is required'],
+    required: true,
   },
   topic: {
     type: String,
-    required: [true, 'Topic is required'],
-    trim: true,
+    required: true,
   },
   scheduledTime: {
     type: Date,
-    required: [true, 'Scheduled time is required'],
+    required: true,
   },
   duration: {
     type: Number,
-    required: [true, 'Duration is required'],
+    required: true,
     min: 15,
-    default: 60, // Default 60 minutes
+  },
+  meetingLink: {
+    type: String,
+  },
+  notes: {
+    type: String,
   },
   status: {
     type: String,
     enum: ['pending', 'confirmed', 'completed', 'cancelled'],
     default: 'pending',
   },
-  meetingLink: {
+  // FIX: Add cancellation reason and who cancelled
+  cancellationReason: {
     type: String,
-    trim: true,
+    default: null,
   },
-  notes: {
+  cancelledBy: {
     type: String,
-    trim: true,
+    enum: ['senior', 'junior'],
+    default: null,
   },
   createdAt: {
     type: Date,
     default: Date.now,
+  },
+  completedAt: {
+    type: Date,
+    default: null,
   },
 });
 

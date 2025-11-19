@@ -19,8 +19,34 @@ const ChatPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Use a ref to ensure fetch only runs once on initial mount
   const hasFetched = useRef(false);
+
+  useEffect(() => {
+    if (location.state?.recipient && conversations.length > 0) {
+      const recipient = location.state.recipient;
+      const foundConversation = conversations.find(c => String(c.participant._id) === String(recipient._id));
+
+      if (foundConversation) {
+        handleSelectConversation(foundConversation);
+      } else {
+        const conversation = {
+          _id: recipient._id,
+          participant: {
+            _id: recipient._id,
+            username: recipient.username,
+            profile: recipient.profile,
+            role: recipient.role,
+          },
+          lastMessage: { content: '', createdAt: new Date(0) },
+          unreadCount: 0,
+        };
+        setSelectedConversation(conversation);
+        joinChat(recipient._id);
+      }
+
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.state?.recipient, conversations]);
 
   useEffect(() => {
     if (user && !hasFetched.current) {
@@ -30,24 +56,15 @@ const ChatPage = () => {
   }, [user]);
 
   const fetchInitialData = async () => {
-    console.log('fetchInitialData called');
     setLoading(true);
     try {
-      // Fetch both conversations and connections in parallel
-      console.log('Fetching conversations and connections...');
       const [chatRes, connRes] = await Promise.all([
         chatService.getConversations(),
         userService.getConnections()
       ]);
 
-      console.log('Chat response:', chatRes);
-      console.log('Connections response:', connRes);
-
       const chatConversations = chatRes || [];
       const connections = connRes || [];
-
-      console.log('Chat conversations:', chatConversations);
-      console.log('Connections:', connections);
 
       // Create a map of all potential chat partners (from both lists)
       const conversationMap = new Map();
@@ -92,22 +109,6 @@ const ChatPage = () => {
 
       setConversations(combinedList);
 
-      // --- NEW LOGIC: Handle incoming recipient AFTER conversations are loaded ---
-      const newRecipient = location.state?.recipient;
-      if (newRecipient) {
-        const targetConvo = combinedList.find(c => c.participant._id === newRecipient._id);
-        if (targetConvo) {
-          handleSelectConversation(targetConvo);
-        } else {
-          // If the connection doesn't exist yet, we can't chat.
-          // This can happen if the 'connect' button wasn't clicked.
-          // For now, we'll just show the list. A better UX would be to auto-connect.
-          console.warn("Attempted to chat with a user you are not connected to.");
-        }
-        // Clear the location state so it doesn't trigger again on re-render
-        navigate(location.pathname, { replace: true });
-      }
-
     } catch (error) {
       console.error('Error fetching initial chat data:', error);
     } finally {
@@ -116,23 +117,13 @@ const ChatPage = () => {
   };
 
   const handleSelectConversation = async (conversation) => {
-    console.log('Selecting conversation:', conversation);
-    if (conversation?.participant?._id) {
-      setSelectedConversation(conversation);
-      joinChat(conversation.participant._id);
-      markMessagesAsRead(conversation.participant._id);
-      
-      // Mark messages as read on server
-      try {
-        await chatService.markAsRead(conversation.participant._id);
-      } catch (error) {
-        console.error('Error marking messages as read:', error);
-      }
-      
-      console.log('Selected conversation set:', conversation.participant._id);
-    } else {
-      console.error('Invalid conversation object:', conversation);
-    }
+    if (!conversation?.participant?._id) return;
+    setSelectedConversation(conversation);
+    // Join chat - useSocket handles queuing if not connected
+    joinChat(conversation.participant._id);
+    markMessagesAsRead(conversation.participant._id);
+    // mark as read server-side
+    try { await chatService.markAsRead(conversation.participant._id); } catch (e) {}
   };
 
   const handleSendMessage = (content) => {
@@ -174,8 +165,7 @@ const ChatPage = () => {
 
   return (
     <div className="h-screen flex bg-gray-50">
-      {/* Conversations Sidebar - Hidden on mobile when chat is selected */}
-      <div className={`${selectedConversation ? 'hidden md:flex' : 'flex'} w-full md:w-1/3 lg:w-1/4 bg-white border-r border-gray-200 flex flex-col`}>
+      <div className={`${selectedConversation ? 'hidden md:flex' : 'flex'} w-full md:w-1/3 lg:w-1/4 bg-white border-r flex flex-col`}>
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-semibold text-gray-900">Messages</h1>
@@ -249,7 +239,7 @@ const ChatPage = () => {
           )}
         </div>
       </div>
-      {/* Chat Window - Full width on mobile when selected, flex-1 on desktop */}
+
       <div className={`${selectedConversation ? 'flex' : 'hidden md:flex'} flex-1 flex flex-col`}>
         {selectedConversation ? (
           <ChatWindow
@@ -264,9 +254,7 @@ const ChatPage = () => {
             <div className="text-center text-gray-500">
               <FaPaperPlane className="text-gray-400 text-6xl mx-auto mb-4" />
               <h3 className="text-2xl font-medium text-gray-900 mb-2">Select a conversation</h3>
-              <p>
-                Choose someone from the sidebar to start chatting.
-              </p>
+              <p>Choose someone from the sidebar to start chatting.</p>
             </div>
           </div>
         )}

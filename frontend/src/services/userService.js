@@ -2,6 +2,11 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token') || '';
+  return { Authorization: token ? `Bearer ${token}` : '' };
+};
+
 const userService = {
   // Get user profile by ID
   getUserProfile: async (userId) => {
@@ -26,37 +31,41 @@ const userService = {
 
   // Get user connections
   getConnections: async () => {
-    const response = await axios.get(`${API_BASE_URL}/connections`);
+    const response = await axios.get(`${API_BASE_URL}/connections`, { headers: getAuthHeaders() });
     return response.data.data || [];
   },
 
   // Get pending connection requests
   getPendingConnections: async () => {
-    const response = await axios.get(`${API_BASE_URL}/connections/pending`);
+    const response = await axios.get(`${API_BASE_URL}/connections/pending`, { headers: getAuthHeaders() });
     return response.data.data || [];
   },
 
   // Send connection request
   sendConnectionRequest: async (userId) => {
-    const response = await axios.post(`${API_BASE_URL}/connections/request/${userId}`);
+    const response = await axios.post(
+      `${API_BASE_URL}/connections/request/${userId}`,
+      {},
+      { headers: getAuthHeaders() }
+    );
     return response.data;
   },
 
   // Accept connection request
   acceptConnectionRequest: async (juniorId) => {
-    const response = await axios.post(`${API_BASE_URL}/connections/accept/${juniorId}`);
+    const response = await axios.post(`${API_BASE_URL}/connections/accept/${juniorId}`, {}, { headers: getAuthHeaders() });
     return response.data;
   },
 
   // Reject connection request
   rejectConnectionRequest: async (juniorId) => {
-    const response = await axios.post(`${API_BASE_URL}/connections/reject/${juniorId}`);
+    const response = await axios.post(`${API_BASE_URL}/connections/reject/${juniorId}`, {}, { headers: getAuthHeaders() });
     return response.data;
   },
 
   // Remove connection
   removeConnection: async (connectionId) => {
-    const response = await axios.delete(`${API_BASE_URL}/connections/${connectionId}`);
+    const response = await axios.delete(`${API_BASE_URL}/connections/${connectionId}`, { headers: getAuthHeaders() });
     return response.data;
   },
 };

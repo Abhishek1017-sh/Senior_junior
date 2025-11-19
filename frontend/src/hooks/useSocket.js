@@ -9,50 +9,70 @@ const useSocket = (initialUnreadCounts = new Map()) => {
   const [messages, setMessages] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [unreadCounts, setUnreadCounts] = useState(initialUnreadCounts);
+  const pendingJoinsRef = useRef(new Set());
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      // Connect to socket server
       const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
       socketRef.current = io(SOCKET_URL, {
-        auth: {
-          token: localStorage.getItem('token'),
-        },
+        auth: { token: localStorage.getItem('token') },
+        transports: ['websocket', 'polling'],
       });
-
       const socket = socketRef.current;
 
-      // Connection events
       socket.on('connect', () => {
-        console.log('Socket connected successfully!');
         setIsConnected(true);
+        // flush pending joins
+        const joins = Array.from(pendingJoinsRef.current);
+        pendingJoinsRef.current.clear();
+        joins.forEach(id => socket.emit('join', { recipientId: id }));
       });
 
       socket.on('disconnect', () => {
         setIsConnected(false);
-        console.log('Disconnected from chat server');
       });
 
-      // Message events
+      // New message handler - dedupe and replace local echoes
       socket.on('newMessage', (message) => {
-        if (message && message._id) {
-          // If this message is not from the current conversation, increment unread count
-          setUnreadCounts(prev => {
-            const newCounts = new Map(prev);
-            const senderId = message.senderId._id;
-            // Only increment if message is not from current user and not in current conversation
-            if (senderId !== user._id) {
-              newCounts.set(senderId, (newCounts.get(senderId) || 0) + 1);
-            }
-            return newCounts;
-          });
-          setMessages(prev => [...prev, message]);
-        }
+        if (!message || !message._id) return;
+
+        setMessages(prev => {
+          // Replace local echo with server message if same text exists
+          const localIndex = prev.findIndex(m => m.isLocal && m.message === message.message);
+          if (localIndex !== -1) {
+            const newArr = [...prev];
+            newArr[localIndex] = message; // replace with server message
+            return newArr;
+          }
+          // Avoid duplicates by _id
+          if (prev.some(m => String(m._id) === String(message._id))) return prev;
+          return [...prev, message];
+        });
+
+        // update unread counts (for other users)
+        setUnreadCounts(prev => {
+          const newCounts = new Map(prev);
+          const senderId = message.senderId?._id || message.senderId;
+          if (senderId && String(senderId) !== String(user._id)) {
+            newCounts.set(senderId, (newCounts.get(senderId) || 0) + 1);
+          }
+          return newCounts;
+        });
       });
 
       socket.on('messageHistory', (data) => {
-        console.log('Received messageHistory:', data);
-        setMessages(data.messages || []);
+        // Support both { messages } and raw arrays
+        const msgs = data?.messages || data?.data || data || [];
+        setMessages(msgs);
+      });
+
+      // Listen for server typing vs stopped typing names
+      socket.on('userTyping', (payload) => {
+        // optional typing indicator state handling (not included here)
+      });
+
+      socket.on('userStoppedTyping', (payload) => {
+        // optional stop typing handling
       });
 
       // User presence events
@@ -66,15 +86,6 @@ const useSocket = (initialUnreadCounts = new Map()) => {
 
       socket.on('userLeft', (userId) => {
         setOnlineUsers(prev => prev.filter(user => user._id !== userId));
-      });
-
-      // Typing indicators
-      socket.on('userTyping', (data) => {
-        // Handle typing indicators
-      });
-
-      socket.on('userStopTyping', (data) => {
-        // Handle stop typing indicators
       });
 
       return () => {
@@ -91,29 +102,37 @@ const useSocket = (initialUnreadCounts = new Map()) => {
   }, [isAuthenticated, user]);
 
   const joinChat = (recipientId) => {
-    console.log('joinChat called with recipientId:', recipientId, 'isConnected:', isConnected);
-    if (socketRef.current && isConnected) {
-      // Clear messages immediately when joining a new chat
-      setMessages([]);
-      // Mark messages as read for this conversation
+    if (!recipientId) return;
+    if (socketRef.current && socketRef.current.connected) {
+      setMessages([]); // clear previous messages
       setUnreadCounts(prev => {
         const newCounts = new Map(prev);
         newCounts.set(recipientId, 0);
         return newCounts;
       });
       socketRef.current.emit('join', { recipientId });
-      console.log('Emitted join event for recipientId:', recipientId);
     } else {
-      console.error('Cannot join chat: socket not connected or not available');
+      pendingJoinsRef.current.add(recipientId);
     }
   };
 
   const sendMessage = (recipientId, content) => {
-    if (socketRef.current && isConnected) {
-      socketRef.current.emit('sendMessage', {
-        recipientId,
-        message: content,
-      });
+    if (!content || !recipientId) return;
+    // Local echo
+    const localMsg = {
+      _id: `local_${Date.now()}`,
+      message: content,
+      senderId: { _id: user._id, username: user.username, profile: user.profile },
+      receiverId: recipientId,
+      timestamp: new Date().toISOString(),
+      isLocal: true,
+    };
+    setMessages(prev => [...prev, localMsg]);
+
+    if (socketRef.current && socketRef.current.connected) {
+      socketRef.current.emit('sendMessage', { recipientId, message: content });
+    } else {
+      // Optionally queue message for retry
     }
   };
 

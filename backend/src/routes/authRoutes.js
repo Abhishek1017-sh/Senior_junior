@@ -1,26 +1,23 @@
 const express = require('express');
-const passport = require('passport');
 const {
   register,
   login,
   getMe,
   oAuthSuccess,
-  oAuthFailure,
 } = require('../controllers/authController');
 const { isAuthenticated } = require('../middleware/auth');
-const {
-  validateRegister,
-  validateLogin,
-} = require('../middleware/validation');
+const passport = require('passport');
 
 const router = express.Router();
 
-// Regular authentication
-router.post('/register', validateRegister, register);
-router.post('/login', validateLogin, login);
+// Public routes
+router.post('/register', register);
+router.post('/login', login);
+
+// Protected routes
 router.get('/me', isAuthenticated, getMe);
 
-// Google OAuth
+// FIX: OAuth routes with proper callback handling
 router.get(
   '/google',
   passport.authenticate('google', { scope: ['profile', 'email'] })
@@ -28,11 +25,16 @@ router.get(
 
 router.get(
   '/google/callback',
-  passport.authenticate('google', { failureRedirect: '/api/auth/oauth/failure' }),
-  oAuthSuccess
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  (req, res) => {
+    // FIX: Generate token and redirect to frontend with token
+    const { generateToken } = require('../utils/generateToken');
+    const token = generateToken(req.user._id);
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
+  }
 );
 
-// GitHub OAuth
 router.get(
   '/github',
   passport.authenticate('github', { scope: ['user:email'] })
@@ -40,12 +42,14 @@ router.get(
 
 router.get(
   '/github/callback',
-  passport.authenticate('github', { failureRedirect: '/api/auth/oauth/failure' }),
-  oAuthSuccess
+  passport.authenticate('github', { failureRedirect: '/login' }),
+  (req, res) => {
+    // FIX: Generate token and redirect to frontend with token
+    const { generateToken } = require('../utils/generateToken');
+    const token = generateToken(req.user._id);
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
+  }
 );
-
-// OAuth success/failure routes
-router.get('/oauth/success', oAuthSuccess);
-router.get('/oauth/failure', oAuthFailure);
 
 module.exports = router;

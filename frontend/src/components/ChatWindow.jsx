@@ -3,7 +3,6 @@ import { FaPaperPlane, FaSmile, FaArrowLeft } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 
 const ChatWindow = ({ recipient, messages, onSendMessage, isTyping, onBack }) => {
-  console.log('ChatWindow rendered with recipient:', recipient, 'messages:', messages);
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef(null);
   const { user } = useAuth();
@@ -13,7 +12,6 @@ const ChatWindow = ({ recipient, messages, onSendMessage, isTyping, onBack }) =>
   };
 
   useEffect(() => {
-    console.log('ChatWindow messages updated:', messages);
     scrollToBottom();
   }, [messages]);
 
@@ -26,10 +24,11 @@ const ChatWindow = ({ recipient, messages, onSendMessage, isTyping, onBack }) =>
   };
 
   const formatTime = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    const ts = timestamp || message?.createdAt;
+    if (!ts) return '';
+    const d = new Date(ts);
+    if (isNaN(d)) return '';
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
@@ -58,19 +57,18 @@ const ChatWindow = ({ recipient, messages, onSendMessage, isTyping, onBack }) =>
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages && messages.length > 0 ? (
           messages
-            .filter(message => message && message._id) // Filter out undefined messages and messages without _id
+            .filter(message => message && (message._id || message.localTempId))
             .map((message) => {
-              // Normalize sender and user ids to strings for reliable comparison
-              const senderId = message?.senderId?._id || message?.senderId?.id || message?.senderId || message?.sender;
+              const senderId = message?.senderId?._id || message?.senderId || message?.sender;
               const userId = user?._id || user?.id;
               const isOwn = userId && senderId && String(senderId) === String(userId);
 
               return (
-                <div key={message._id} className={`flex w-full ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                <div key={message._id || message.localTempId} className={`flex w-full ${isOwn ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[70%] px-4 py-2 rounded-lg ${isOwn ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-900'}`}>
                     <p className="text-sm">{message.message || message.content}</p>
                     <p className={`text-xs mt-1 ${isOwn ? 'text-blue-100' : 'text-gray-500'}`}>
-                      {message.timestamp ? formatTime(message.timestamp) : formatTime(message.createdAt)}
+                      {formatTime(message.timestamp || message.createdAt)}
                     </p>
                   </div>
                 </div>

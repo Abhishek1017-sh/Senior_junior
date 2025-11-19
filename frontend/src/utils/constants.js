@@ -36,22 +36,24 @@ export const SOCKET_EVENTS = {
 };
 
 export const SKILL_CATEGORIES = [
+  'React',
+  'Vue.js',
+  'Angular',
+  'Node.js',
+  'Python',
+  'Java',
+  'C++',
   'Web Development',
   'Mobile Development',
   'Data Science',
-  'Machine Learning',
+  'AI/ML',
   'DevOps',
   'Cloud Computing',
-  'Cybersecurity',
-  'UI/UX Design',
-  'Product Management',
-  'Business Analysis',
-  'Project Management',
-  'Quality Assurance',
-  'Database Administration',
-  'System Administration',
-  'Technical Writing',
-  'Other',
+  'Database Design',
+  'System Design',
+  'Leadership',
+  'Career Growth',
+  'Interview Prep',
 ];
 
 export const EXPERIENCE_LEVELS = [

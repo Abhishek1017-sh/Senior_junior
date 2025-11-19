@@ -33,7 +33,8 @@ const initializeSocket = (io) => {
 
   // Connection event
   io.on('connection', (socket) => {
-    console.log(`User connected: ${socket.user.username} (${socket.user._id})`);
+    // Minimal connect log
+    console.info(`Socket connected: ${socket.user.username} (${socket.user._id})`);
 
     // Join user to their own room (for direct messaging)
     socket.join(socket.user._id.toString());
@@ -68,11 +69,8 @@ const initializeSocket = (io) => {
           .populate('senderId', 'username profile')
           .populate('receiverId', 'username profile');
 
-        socket.emit('messageHistory', { messages });
-
-        console.log(
-          `User ${socket.user.username} joined room with ${recipient.username}. Sent ${messages.length} messages.`
-        );
+        socket.emit('messageHistory', { messages }); // keep as-is
+        // Removed verbose console logs for each join to reduce noise
       } catch (error) {
         console.error('Error joining chat:', error);
         socket.emit('error', { message: 'Failed to join chat' });
@@ -111,18 +109,9 @@ const initializeSocket = (io) => {
           .sort()
           .join('_');
 
-        // Emit to the room (both sender and receiver)
+        // Emit to the chat room so both participants get it
         io.to(roomId).emit('newMessage', chatMessage);
-
-        // Also emit to recipient's personal room (if they're online but not in this chat)
-        io.to(recipientId).emit('messageNotification', {
-          from: socket.user._id,
-          message: chatMessage,
-        });
-
-        console.log(
-          `Message from ${socket.user.username} to ${recipient.username}: ${message}`
-        );
+        // Removed console.log of every message to reduce noise
       } catch (error) {
         console.error('Error sending message:', error);
         socket.emit('error', { message: 'Failed to send message' });
@@ -159,7 +148,7 @@ const initializeSocket = (io) => {
           { isRead: true }
         );
 
-        // Notify the sender that messages were read
+        // Notify the sender that messages were read (only to them)
         io.to(senderId).emit('messagesRead', {
           readBy: socket.user._id,
         });
@@ -168,9 +157,9 @@ const initializeSocket = (io) => {
       }
     });
 
-    // Handle disconnect
+    // Minimal disconnect log
     socket.on('disconnect', () => {
-      console.log(`User disconnected: ${socket.user.username} (${socket.user._id})`);
+      console.info(`Socket disconnected: ${socket.user.username} (${socket.user._id})`);
     });
   });
 };

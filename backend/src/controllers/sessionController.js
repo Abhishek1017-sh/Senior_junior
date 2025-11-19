@@ -177,6 +177,7 @@ const confirmSession = async (req, res, next) => {
 const cancelSession = async (req, res, next) => {
   try {
     const { sessionId } = req.params;
+    const { reason } = req.body; // FIX: Accept cancellation reason
 
     const session = await Session.findById(sessionId);
 
@@ -206,8 +207,13 @@ const cancelSession = async (req, res, next) => {
       });
     }
 
-    // Update session
+    // FIX: Determine who is cancelling and save reason
+    const cancelledBy = session.seniorId.toString() === req.user._id.toString() ? 'senior' : 'junior';
+
+    // Update session with cancellation details
     session.status = 'cancelled';
+    session.cancellationReason = reason || 'No reason provided'; // FIX: Save reason
+    session.cancelledBy = cancelledBy; // FIX: Track who cancelled
     await session.save();
 
     const populatedSession = await Session.findById(session._id)

@@ -2,41 +2,78 @@ import { Link } from 'react-router-dom';
 import { FaStar, FaMapMarkerAlt, FaUserPlus, FaCheck } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import userService from '../services/userService';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-const SeniorCard = ({ senior, onConnectionUpdate, onUserUpdate, user: propUser }) => {
-  const { user: contextUser } = useAuth();
-  const user = propUser || contextUser;
+const SeniorCard = ({ senior, onConnectionUpdate, onUserUpdate }) => {
+  const { user, refetchUser } = useAuth();
   const [isConnecting, setIsConnecting] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState(null);
-  const [connectionErrorMessage, setConnectionErrorMessage] = useState('');
+  const [localConnectionState, setLocalConnectionState] = useState('none');
+  const [localOverride, setLocalOverride] = useState(null); // NEW: hold temporary pending override
+
+  // FIX: Recalculate state whenever user or senior changes
+  useEffect(() => {
+    if (user && senior) {
+      // FIX: Check connections array for existing connection
+      const isConnected = user?.connections?.some(
+        conn => {
+          const connId = typeof conn === 'string' ? conn : conn._id || conn;
+          const seniorId = typeof senior._id === 'string' ? senior._id : String(senior._id);
+          return String(connId) === seniorId;
+        }
+      );
+
+      // FIX: Check pending connections array
+      const hasPendingRequest = user?.pendingConnections?.some(
+        conn => {
+          const connId = typeof conn === 'string' ? conn : conn._id || conn;
+          const seniorId = typeof senior._id === 'string' ? senior._id : String(senior._id);
+          return String(connId) === seniorId;
+        }
+      );
+      
+      if (isConnected) {
+        setLocalConnectionState('connected');
+      } else if (hasPendingRequest) {
+        setLocalConnectionState('pending');
+      } else {
+        setLocalConnectionState('none');
+      }
+    }
+  }, [user, senior, localOverride]);
 
   const handleConnect = async () => {
+    if (isConnecting) return;
     setIsConnecting(true);
-    setConnectionStatus(null);
+    
     try {
-      await userService.sendConnectionRequest(senior._id);
-      setConnectionStatus('success');
-      if (onConnectionUpdate) {
-        onConnectionUpdate();
-      }
-      if (onUserUpdate) {
-        onUserUpdate({
-          pendingConnections: [...(user?.pendingConnections || []), senior._id]
-        });
-      }
+      const response = await userService.sendConnectionRequest(senior._id);
+      // show pending immediately for good UX
+      setLocalConnectionState('pending');
+      // re-sync with backend user
+      await refetchUser();
+      if (onConnectionUpdate) onConnectionUpdate();
+      // clear local override if connection shows up on refetch
+      setLocalOverride(null);
     } catch (error) {
-      console.error('Error sending connection request:', error);
-      setConnectionStatus('error');
-      setConnectionErrorMessage(error.response?.data?.message || 'Failed to send connection request');
+      const msg = error?.response?.data?.message;
+      if (msg === 'Connection request already sent') {
+        // If server says request already exists (on senior), show pending for junior UX
+        setLocalOverride('pending'); // persist until refetch confirms
+        await refetchUser();
+      } else if (msg === 'Connection already exists') {
+        setLocalConnectionState('connected');
+        await refetchUser();
+        setLocalOverride(null);
+      } else {
+        setLocalConnectionState('none');
+      }
     } finally {
       setIsConnecting(false);
     }
   };
 
-  const isOwnProfile = user?._id === senior._id;
-  const isConnected = user?.connections?.some(conn => conn.toString() === senior._id.toString());
-  const hasPendingRequest = user?.pendingConnections?.some(conn => conn.toString() === senior._id.toString());
+  const isOwnProfile = user?._id === String(senior._id);
+
   const renderStars = (rating) => {
     const stars = [];
     const fullStars = Math.floor(rating);
@@ -119,57 +156,46 @@ const SeniorCard = ({ senior, onConnectionUpdate, onUserUpdate, user: propUser }
             </div>
 
             <div className="flex space-x-2">
-              {!isOwnProfile && !isConnected && !hasPendingRequest && (
-                <div className="flex flex-col items-end">
-                  <button
-                    onClick={handleConnect}
-                    disabled={isConnecting}
-                    className="bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 text-sm flex items-center"
-                  >
-                    {isConnecting ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
-                        Connecting...
-                      </>
-                    ) : (
-                      <>
-                        <FaUserPlus className="mr-1" />
-                        Connect
-                      </>
-                    )}
-                  </button>
-                  {connectionStatus === 'success' && (
-                    <span className="text-green-600 text-xs mt-1 flex items-center">
-                      <FaCheck className="mr-1" />
-                      Request sent!
-                    </span>
+              {/* Show Connect button when not connected and no pending request */}
+              {!isOwnProfile && localConnectionState === 'none' && (
+                <button
+                  onClick={handleConnect}
+                  disabled={isConnecting}
+                  className="bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 text-sm flex items-center"
+                >
+                  {isConnecting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      <FaUserPlus className="mr-1" />
+                      Connect
+                    </>
                   )}
-                  {connectionStatus === 'error' && (
-                    <span className="text-red-600 text-xs mt-1">
-                      {connectionErrorMessage || 'Failed to connect'}
-                    </span>
-                  )}
-                </div>
+                </button>
               )}
 
-              {hasPendingRequest && !isConnected && (
-                <div className="flex flex-col items-end">
-                  <span className="bg-yellow-100 text-yellow-800 px-3 py-2 rounded-md text-sm">
-                    Request Pending
-                  </span>
-                </div>
+              {/* Show Request Pending when request is sent */}
+              {!isOwnProfile && localConnectionState === 'pending' && (
+                <span className="bg-yellow-100 text-yellow-800 px-3 py-2 rounded-md text-sm font-medium">
+                  Request Pending
+                </span>
               )}
 
-              {isConnected && (
-                <div className="flex flex-col items-end">
+              {/* Show Message button when already connected */}
+              {!isOwnProfile && localConnectionState === 'connected' && (
+                <div className="flex flex-col items-end space-y-1">
                   <Link
-                    to={`/chat?recipient=${senior._id}`}
+                    to="/chat"
+                    state={{ recipient: senior }}
                     className="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 text-sm flex items-center"
                   >
                     <FaUserPlus className="mr-1" />
                     Message
                   </Link>
-                  <span className="text-green-600 text-xs mt-1">Connected</span>
+                  <span className="text-green-600 text-xs">Connected</span>
                 </div>
               )}
 

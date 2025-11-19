@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import useSocket from '../hooks/useSocket';
 
 const ChatContext = createContext();
@@ -21,11 +21,12 @@ export const ChatProvider = ({ children }) => {
     setTotalUnreadCount(total);
   }, [unreadCounts]);
 
-  const value = {
+  // FIX BUG 3: Use useMemo to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     totalUnreadCount,
     unreadCounts,
     isConnected,
-  };
+  }), [totalUnreadCount, unreadCounts, isConnected]);
 
   return (
     <ChatContext.Provider value={value}>

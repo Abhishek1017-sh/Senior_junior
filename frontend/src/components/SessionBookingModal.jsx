@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { FaCalendarAlt, FaClock, FaVideo, FaStickyNote } from 'react-icons/fa';
 import sessionService from '../services/sessionService';
 
-const SessionBookingModal = ({ isOpen, onClose, senior, onSuccess }) => {
+const SessionBookingModal = ({ isOpen, onClose, senior, onSuccess, socket }) => {
   const [formData, setFormData] = useState({
     topic: '',
     scheduledTime: '',
@@ -60,9 +60,17 @@ const SessionBookingModal = ({ isOpen, onClose, senior, onSuccess }) => {
         notes: formData.notes.trim()
       };
 
-      console.log('Sending session data:', sessionData); // Debug log
+      const response = await sessionService.bookSession(sessionData);
+      
+      // FIX: Emit socket event to notify senior
+      if (socket) {
+        socket.emit('sessionBooked', {
+          seniorId: senior._id,
+          sessionId: response.data._id,
+          sessionDetails: response.data,
+        });
+      }
 
-      await sessionService.bookSession(sessionData);
       onSuccess();
       onClose();
     } catch (error) {

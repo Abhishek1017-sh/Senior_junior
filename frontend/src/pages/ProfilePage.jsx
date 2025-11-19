@@ -10,19 +10,21 @@ import { USER_ROLES } from '../utils/constants';
 
 const ProfilePage = () => {
   const { userId } = useParams();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, refetchUser } = useAuth();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState(null);
   const [bookingStatus, setBookingStatus] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [localOverride, setLocalOverride] = useState(null); // NEW
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         const response = await userService.getUserProfile(userId);
-        setUser(response.data); // <-- Extract the 'data' property
+        setUser(response.data);
       } catch (error) {
         console.error('Error fetching user profile:', error);
       } finally {
@@ -33,6 +35,29 @@ const ProfilePage = () => {
     fetchUserProfile();
   }, [userId]);
 
+  // Check connection status whenever currentUser or userId changes
+  useEffect(() => {
+    if (currentUser && userId) {
+      const connected = currentUser?.connections?.some(conn => {
+        const connId = typeof conn === 'string' ? conn : conn._id || conn;
+        return String(connId) === String(userId);
+      }) || false;
+
+      const pending = currentUser?.pendingConnections?.some(conn => {
+        const connId = typeof conn === 'string' ? conn : conn._id || conn;
+        return String(connId) === String(userId);
+      }) || false;
+
+      // prefer override while it's set
+      if (localOverride === 'pending') {
+        setConnectionStatus('pending');
+      } else {
+        setIsConnected(connected);
+        if (pending) setConnectionStatus('pending');
+      }
+    }
+  }, [currentUser, userId, localOverride]);
+
   const handleBookSession = () => {
     setShowBookingModal(true);
   };
@@ -40,15 +65,37 @@ const ProfilePage = () => {
   const handleConnect = async () => {
     setIsConnecting(true);
     setConnectionStatus(null);
+
     try {
-      await userService.sendConnectionRequest(userId);
-      setConnectionStatus('success');
-      // Refresh the user data to show updated connection status
-      const response = await userService.getUserProfile(userId);
-      setUser(response.data);
+      if (!user || !user._id) {
+        setConnectionStatus('error');
+        return;
+      }
+
+      if (user.role !== 'senior' && user.role !== 'both') {
+        setConnectionStatus('error');
+        return;
+      }
+
+      // send request
+      const response = await userService.sendConnectionRequest(user._id);
+      setConnectionStatus('pending');
+      await refetchUser();
+      setLocalOverride(null);
     } catch (error) {
-      console.error('Error sending connection request:', error);
-      setConnectionStatus('error');
+      const msg = error?.response?.data?.message;
+      // map server messages to UI
+      if (msg === 'Connection request already sent') {
+        // server recorded request on senior; junior should see "Requested"
+        setLocalOverride('pending'); // keep override until refetch verifies
+        await refetchUser();
+      } else if (msg === 'Connection already exists') {
+        setIsConnected(true);
+        await refetchUser();
+        setLocalOverride(null);
+      } else {
+        setConnectionStatus('error');
+      }
     } finally {
       setIsConnecting(false);
     }
@@ -95,7 +142,6 @@ const ProfilePage = () => {
   const isOwnProfile = currentUser?._id === userId;
   const isJunior = currentUser?.role === USER_ROLES.JUNIOR || currentUser?.role === USER_ROLES.BOTH;
   const canBookSession = !isOwnProfile && isJunior && user.role !== USER_ROLES.JUNIOR;
-  const isConnected = currentUser?.connections?.includes(userId);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -148,7 +194,7 @@ const ProfilePage = () => {
                     {bookingStatus === 'success' && (
                       <span className="text-green-600 text-sm mt-1 flex items-center">
                         <FaCheck className="mr-1" />
-                        Session booked! Check "My Sessions"
+                        Session booked!
                       </span>
                     )}
                     {bookingStatus === 'error' && (
@@ -159,11 +205,12 @@ const ProfilePage = () => {
                   </div>
                 )}
 
+                {/* Show appropriate button based on connection status */}
                 {!isOwnProfile && !isConnected && (user.role === USER_ROLES.SENIOR || user.role === USER_ROLES.BOTH) && (
                   <div className="flex flex-col items-start">
                     <button
                       onClick={handleConnect}
-                      disabled={isConnecting}
+                      disabled={isConnecting || connectionStatus === 'pending'}
                       className="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 disabled:opacity-50 flex items-center"
                     >
                       {isConnecting ? (
@@ -174,14 +221,19 @@ const ProfilePage = () => {
                       ) : (
                         <>
                           <FaUserPlus className="inline mr-2" />
-                          Connect
+                          {connectionStatus === 'pending' ? 'Requested' : 'Connect'}
                         </>
                       )}
                     </button>
+                    {connectionStatus === 'pending' && (
+                      <span className="text-yellow-600 text-sm mt-1">
+                        Request Pending
+                      </span>
+                    )}
                     {connectionStatus === 'success' && (
                       <span className="text-green-600 text-sm mt-1 flex items-center">
                         <FaCheck className="mr-1" />
-                        Connection request sent!
+                        Request sent!
                       </span>
                     )}
                     {connectionStatus === 'error' && (
@@ -192,14 +244,15 @@ const ProfilePage = () => {
                   </div>
                 )}
 
+                {/* Show Message button when already connected */}
                 {!isOwnProfile && isConnected && (
                   <Link
-                    to={`/chat`}
-                    state={{ recipient: user }} // <-- ADD THIS STATE PROP
-                    className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
+                    to="/chat"
+                    state={{ recipient: user }}
+                    className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 flex items-center"
                   >
-                  <FaComments className="inline mr-2" />
-                  Message
+                    <FaComments className="inline mr-2" />
+                    Message
                   </Link>
                 )}
               </div>
