@@ -45,7 +45,7 @@ const SessionNotificationPanel = () => {
                 <div className="flex-1">
                   <div className="flex items-center">
                     <img
-                      src={request.junior.profilePicture || '/default-avatar.png'}
+                      src={request.junior?.profile?.profilePictureUrl || request.junior.profilePicture || '/default-avatar.png'}
                       alt={request.junior.firstName}
                       className="w-10 h-10 rounded-full mr-3 object-cover"
                     />

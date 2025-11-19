@@ -41,6 +41,14 @@ const userService = {
     return response.data.data || [];
   },
 
+  // Withdraw a previously sent connection request
+  withdrawConnectionRequest: async (seniorId) => {
+    const response = await axios.delete(`${API_BASE_URL}/connections/withdraw/${seniorId}`, {
+      headers: getAuthHeaders(),
+    });
+    return response.data;
+  },
+
   // Send connection request
   sendConnectionRequest: async (userId) => {
     const response = await axios.post(
@@ -66,6 +74,21 @@ const userService = {
   // Remove connection
   removeConnection: async (connectionId) => {
     const response = await axios.delete(`${API_BASE_URL}/connections/${connectionId}`, { headers: getAuthHeaders() });
+    return response.data;
+  },
+
+  // Upload profile picture
+  uploadProfilePicture: async (file) => {
+    const formData = new FormData();
+    formData.append('profilePicture', file);
+    const response = await axios.post(`${API_BASE_URL}/users/profile/picture`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data', ...getAuthHeaders() },
+    });
+    return response.data;
+  },
+  // Delete profile picture
+  deleteProfilePicture: async () => {
+    const response = await axios.delete(`${API_BASE_URL}/users/profile/picture`, { headers: getAuthHeaders() });
     return response.data;
   },
 };

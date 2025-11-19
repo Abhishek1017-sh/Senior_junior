@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom';
 import { FaUsers, FaCalendarAlt, FaComments, FaStar } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import Container from '../components/Container';
 
 const HomePage = () => {
   const { isAuthenticated } = useAuth();
 
   return (
-    <div className="space-y-12">
+    <Container>
+      <div className="space-y-12">
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-12 text-center">
         <h1 className="text-4xl font-bold mb-4">Connect with Mentors & Learners</h1>
@@ -134,7 +136,8 @@ const HomePage = () => {
           </Link>
         </section>
       )}
-    </div>
+      </div>
+    </Container>
   );
 };
 

@@ -64,7 +64,8 @@ const getUserProfile = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.userId)
       .select('-password -socialLogins')
-      .populate('connections', 'username email profile');
+      .populate('connections', 'username email profile')
+      .populate('pendingConnections', 'username email profile');
 
     if (!user) {
       return res.status(404).json({
@@ -73,9 +74,21 @@ const getUserProfile = async (req, res, next) => {
       });
     }
 
+    // Server-side privacy: If the requesting user is not the owner, remove sensitive fields
+    let returnUser = user;
+    if (!req.user || String(req.user._id) !== String(user._id)) {
+      // convert to plain object so we can delete fields safely
+      returnUser = user.toObject();
+      // Remove email and precise location by default to respect privacy
+      delete returnUser.email;
+      if (returnUser.profile) {
+        delete returnUser.profile.location;
+      }
+    }
+
     res.status(200).json({
       success: true,
-      data: user,
+      data: returnUser,
     });
   } catch (error) {
     next(error);
@@ -161,9 +174,44 @@ const uploadProfilePicture = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Remove profile picture
+ * @route   DELETE /api/users/profile/picture
+ * @access  Private
+ */
+const removeProfilePicture = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id).select('profile.profilePictureUrl');
+    if (!user || !user.profile || !user.profile.profilePictureUrl) {
+      return res.status(400).json({ success: false, message: 'No profile picture found' });
+    }
+
+    // Attempt to delete the file from uploads folder
+    try {
+      const path = require('path');
+      const fs = require('fs');
+      const uploadDir = process.env.UPLOAD_PATH || './uploads';
+      const parts = user.profile.profilePictureUrl.split('/uploads/');
+      const filename = parts.length > 1 ? parts[1] : path.basename(user.profile.profilePictureUrl);
+      const filePath = path.join(uploadDir, filename);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    } catch (delErr) {
+      console.warn('Failed to remove file from disk:', delErr.message);
+    }
+
+    // Update user doc to clear profile picture
+    const updated = await User.findByIdAndUpdate(req.user._id, { 'profile.profilePictureUrl': null }, { new: true });
+
+    res.status(200).json({ success: true, message: 'Profile picture removed', data: updated });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getAllSeniors,
   getUserProfile,
   updateProfile,
   uploadProfilePicture,
+  removeProfilePicture,
 };

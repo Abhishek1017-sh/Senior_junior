@@ -24,6 +24,20 @@ const sendConnectionRequest = async (req, res, next) => {
 
     const senior = await User.findById(seniorId);
     if (!senior) {
+      console.warn(`withdrawConnectionRequest: senior not found (seniorId=${seniorId}, juniorId=${juniorId})`);
+
+      // Fallback: try to remove juniorId from any pending lists (this means junior wanted to withdraw
+      // but senior might have been deleted or we have inconsistent state). This is a heavy-handed cleanup
+      // but ensures UI won't show pending requests forever.
+      const cleanup = await User.updateMany(
+        { pendingConnections: juniorId },
+        { $pull: { pendingConnections: juniorId } }
+      );
+      if (cleanup.modifiedCount > 0) {
+        console.log(`withdrawConnectionRequest: fallback removed juniorId from ${cleanup.modifiedCount} users`);
+        return res.status(200).json({ success: true, message: 'Connection request withdrawn (fallback)' });
+      }
+
       return res.status(404).json({ success: false, message: 'Senior not found' });
     }
 
@@ -222,6 +236,52 @@ const rejectConnectionRequest = async (req, res, next) => {
 };
 
 /**
+ * @desc    Withdraw/cancel connection request (Junior) - remove juniorId from senior's pending list
+ * @route   DELETE /api/connections/withdraw/:seniorId
+ * @access  Private
+ */
+const withdrawConnectionRequest = async (req, res, next) => {
+  try {
+    const { seniorId } = req.params;
+    const juniorId = req.user._id;
+
+    if (!seniorId) {
+      return res.status(400).json({ success: false, message: 'Senior ID missing' });
+    }
+
+    // Senior must exist
+    const senior = await User.findById(seniorId);
+    if (!senior) {
+      return res.status(404).json({ success: false, message: 'Senior not found' });
+    }
+
+    // Check that junior actually has a pending request in senior.pendingConnections
+    if (!senior.pendingConnections.some(c => String(c) === String(juniorId))) {
+      console.warn(`withdrawConnectionRequest: no pending request (seniorId=${seniorId}, juniorId=${juniorId})`);
+
+      // Attempt a targeted cleanup on any other users who may have this junior in pending
+      const cleanup2 = await User.updateMany(
+        { pendingConnections: juniorId },
+        { $pull: { pendingConnections: juniorId } }
+      );
+      if (cleanup2.modifiedCount > 0) {
+        console.log(`withdrawConnectionRequest: cleanup removed juniorId from ${cleanup2.modifiedCount} users`);
+        return res.status(200).json({ success: true, message: 'Connection request withdrawn (cleanup)' });
+      }
+
+      return res.status(400).json({ success: false, message: 'No pending connection request to withdraw' });
+    }
+
+    await User.findByIdAndUpdate(seniorId, { $pull: { pendingConnections: juniorId } });
+    console.log(`withdrawConnectionRequest: withdrawn (seniorId=${seniorId}, juniorId=${juniorId})`);
+
+    res.status(200).json({ success: true, message: 'Connection request withdrawn' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * @desc    Get pending connection requests for logged-in user
  * @route   GET /api/connections/pending
  * @access  Private
@@ -268,4 +328,5 @@ module.exports = {
   getPendingConnections,
   getPendingConnectionsCount,
   removeConnection,
+  withdrawConnectionRequest,
 };

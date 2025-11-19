@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
 import userService from '../services/userService';
 import { Link } from 'react-router-dom';
+import Container from '../components/Container';
 
 const ConnectionsPage = () => {
   const { user, updateUser, refetchUser } = useAuth();
@@ -101,7 +102,7 @@ const ConnectionsPage = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <Container className="p-6">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Connections</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -207,7 +208,7 @@ const ConnectionsPage = () => {
           )}
         </div>
       </div>
-    </div>
+    </Container>
   );
 };
 

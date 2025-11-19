@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { FaStar, FaTimes } from 'react-icons/fa';
 
-const ReviewModal = ({ isOpen, onClose, onSubmit, sessionId }) => {
+const ReviewModal = ({ isOpen, onClose, onSubmit, sessionId, sessions = [] }) => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [hoverRating, setHoverRating] = useState(0);
+  const [selectedSessionId, setSelectedSessionId] = useState(sessionId || (sessions.length > 0 ? sessions[0]._id : ''));
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -12,7 +13,7 @@ const ReviewModal = ({ isOpen, onClose, onSubmit, sessionId }) => {
     setLoading(true);
     try {
       await onSubmit({
-        sessionId,
+        sessionId: selectedSessionId || sessionId,
         rating,
         comment: comment.trim(),
       });
@@ -42,6 +43,20 @@ const ReviewModal = ({ isOpen, onClose, onSubmit, sessionId }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {sessions && sessions.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Select session to review</label>
+              <select
+                value={selectedSessionId}
+                onChange={(e) => setSelectedSessionId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              >
+                {sessions.map((s) => (
+                  <option key={s._id} value={s._id}>{s.topic} — {new Date(s.scheduledTime).toLocaleString()}</option>
+                ))}
+              </select>
+            </div>
+          )}
           {/* Rating */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

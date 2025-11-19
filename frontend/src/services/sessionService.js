@@ -24,6 +24,13 @@ const sessionService = {
     return response.data;
   },
 
+  // Clear past sessions for logged-in user
+  clearPastSessions: async (days = null) => {
+    const query = days ? `?days=${days}` : '';
+    const response = await axios.delete(`${API_BASE_URL}/sessions/clear-past${query}`);
+    return response.data;
+  },
+
   // Confirm a session
   confirmSession: async (sessionId) => {
     const response = await axios.put(`${API_BASE_URL}/sessions/${sessionId}/confirm`);

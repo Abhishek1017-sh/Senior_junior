@@ -24,7 +24,7 @@ const useSessionNotifications = (socket) => {
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification('New Session Request', {
           body: data.message,
-          icon: data.junior.profilePicture || '/default-avatar.png',
+          icon: data.junior?.profile?.profilePictureUrl || data.junior?.profilePicture || '/default-avatar.png',
         });
       }
     });
@@ -40,7 +40,7 @@ const useSessionNotifications = (socket) => {
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification('Session Accepted!', {
           body: data.message,
-          icon: data.senior.profilePicture || '/default-avatar.png',
+          icon: data.senior?.profile?.profilePictureUrl || data.senior?.profilePicture || '/default-avatar.png',
         });
       }
     });

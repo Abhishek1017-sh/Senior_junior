@@ -71,18 +71,13 @@ const userSchema = new mongoose.Schema({
         trim: true,
       },
     }],
-    availability: [{
-      day: {
-        type: String,
-        enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+    // Availability may be stored as structured objects (day, startTime, endTime)
+    // or as simple strings (legacy options, e.g., 'Weekdays (9 AM - 5 PM)')
+    availability: [
+      {
+        type: mongoose.Schema.Types.Mixed,
       },
-      startTime: {
-        type: String,
-      },
-      endTime: {
-        type: String,
-      },
-    }],
+    ],
     hourlyRate: {
       type: Number,
       default: 0,

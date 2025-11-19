@@ -11,6 +11,7 @@ const connectDB = require('./config/db');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const initializeSocket = require('./sockets/chatSocket');
 const initializeSessionSocket = require('./sockets/sessionSocket');
+const { clearOldSessionsGlobal } = require('./controllers/sessionController');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
@@ -108,6 +109,25 @@ server.listen(PORT, () => {
 ╚═══════════════════════════════════════════════════════════════╝
   `);
 });
+
+// Auto cleanup of old sessions (runs once on startup and then daily)
+const RETENTION_DAYS = Number(process.env.SESSION_RETENTION_DAYS) || 30;
+(async () => {
+  try {
+    // Run on startup
+    await clearOldSessionsGlobal(RETENTION_DAYS);
+    // Run daily (24h) thereafter
+    setInterval(async () => {
+      try {
+        await clearOldSessionsGlobal(RETENTION_DAYS);
+      } catch (err) {
+        console.error('Scheduled cleanup failed:', err);
+      }
+    }, 24 * 60 * 60 * 1000);
+  } catch (err) {
+    console.error('Failed to schedule session cleanup:', err);
+  }
+})();
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {

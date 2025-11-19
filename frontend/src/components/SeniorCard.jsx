@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import userService from '../services/userService';
 import { useState, useEffect } from 'react';
 
+import { maskString } from '../utils/helpers';
+
 const SeniorCard = ({ senior, onConnectionUpdate, onUserUpdate }) => {
   const { user, refetchUser } = useAuth();
   const [isConnecting, setIsConnecting] = useState(false);
@@ -22,13 +24,18 @@ const SeniorCard = ({ senior, onConnectionUpdate, onUserUpdate }) => {
         }
       );
 
-      // FIX: Check pending connections array
-      const hasPendingRequest = user?.pendingConnections?.some(
-        conn => {
+      // FIX: Check pending connections array on the senior side — if the senior's pending list
+      // contains the current user's id, then the current user has sent a request that is pending.
+      const hasPendingRequest = (
+        (senior?.pendingConnections || []).some(conn => {
+          const connId = typeof conn === 'string' ? conn : conn._id || conn;
+          return String(connId) === String(user?._id);
+        }) ||
+        (user?.pendingConnections || []).some(conn => {
           const connId = typeof conn === 'string' ? conn : conn._id || conn;
           const seniorId = typeof senior._id === 'string' ? senior._id : String(senior._id);
           return String(connId) === seniorId;
-        }
+        })
       );
       
       if (isConnected) {
@@ -72,6 +79,27 @@ const SeniorCard = ({ senior, onConnectionUpdate, onUserUpdate }) => {
     }
   };
 
+  const handleWithdraw = async () => {
+    if (isConnecting) return;
+    setIsConnecting(true);
+    try {
+      await userService.withdrawConnectionRequest(senior._id);
+      // reflect the change locally
+      setLocalConnectionState('none');
+      // re-sync with backend
+      if (onConnectionUpdate) onConnectionUpdate();
+      await refetchUser();
+    } catch (error) {
+      console.warn('withdraw error:', error);
+      // if withdraw fails (404/400), still try to re-sync and clear the UI to avoid stuck state
+      await refetchUser();
+      setLocalConnectionState('none');
+      console.error('Error withdrawing connection request:', error);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
   const isOwnProfile = user?._id === String(senior._id);
 
   const renderStars = (rating) => {
@@ -102,16 +130,16 @@ const SeniorCard = ({ senior, onConnectionUpdate, onUserUpdate }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow">
       <div className="flex items-start space-x-4">
         <img
-          src={senior.profile?.profilePicture || '/default-avatar.png'}
+          src={senior.profile?.profilePictureUrl || senior.profile?.profilePicture || '/default-avatar.png'}
           alt={senior.username}
           className="w-16 h-16 rounded-full object-cover"
         />
 
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-lg font-semibold text-gray-900 truncate">
             {senior.profile?.firstName} {senior.profile?.lastName}
           </h3>
           <p className="text-sm text-gray-600">@{senior.username}</p>
@@ -127,7 +155,7 @@ const SeniorCard = ({ senior, onConnectionUpdate, onUserUpdate }) => {
 
           <div className="mt-2">
             <p className="text-sm text-gray-700 line-clamp-2">
-              {senior.seniorProfile?.bio || 'No bio available'}
+              {senior.profile?.bio || senior.seniorProfile?.bio || 'No bio available'}
             </p>
           </div>
 
@@ -149,13 +177,15 @@ const SeniorCard = ({ senior, onConnectionUpdate, onUserUpdate }) => {
             </div>
           </div>
 
-          <div className="mt-4 flex items-center justify-between">
+          <div className="mt-4 flex flex-wrap sm:flex-nowrap items-start sm:items-center justify-between gap-3">
             <div className="text-sm text-gray-600">
               <FaMapMarkerAlt className="inline mr-1" />
-              {senior.profile?.location || 'Location not specified'}
+              {String(user?._id) === String(senior?._id || senior._id)
+                ? (senior.profile?.location || 'Location not specified')
+                : (senior.profile?.location ? maskString(senior.profile.location, { showFirst: 2 }) : 'Location not specified')}
             </div>
 
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap space-x-2 gap-2">
               {/* Show Connect button when not connected and no pending request */}
               {!isOwnProfile && localConnectionState === 'none' && (
                 <button
@@ -177,11 +207,20 @@ const SeniorCard = ({ senior, onConnectionUpdate, onUserUpdate }) => {
                 </button>
               )}
 
-              {/* Show Request Pending when request is sent */}
+              {/* Show Request Pending when request is sent; allow withdraw */}
               {!isOwnProfile && localConnectionState === 'pending' && (
-                <span className="bg-yellow-100 text-yellow-800 px-3 py-2 rounded-md text-sm font-medium">
-                  Request Pending
-                </span>
+                <div className="flex items-center space-x-2">
+                  <span className="bg-yellow-100 text-yellow-800 px-3 py-2 rounded-md text-sm font-medium">
+                    Requested
+                  </span>
+                  <button
+                    onClick={handleWithdraw}
+                    disabled={isConnecting}
+                    className="text-sm px-2 py-1 bg-gray-100 rounded-md hover:bg-gray-200"
+                  >
+                    Cancel
+                  </button>
+                </div>
               )}
 
               {/* Show Message button when already connected */}
@@ -199,7 +238,7 @@ const SeniorCard = ({ senior, onConnectionUpdate, onUserUpdate }) => {
                 </div>
               )}
 
-              <Link
+                <Link
                 to={`/profile/${senior._id}`}
                 className="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 text-sm"
               >

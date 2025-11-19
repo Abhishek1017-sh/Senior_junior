@@ -267,6 +267,44 @@ const getSessions = async (req, res, next) => {
 };
 
 /**
+ * @desc    Clear old sessions for the logged-in user (manual)
+ * @route   DELETE /api/sessions/clear-past
+ * @access  Private
+ */
+const clearOldSessionsForUser = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const days = Number(req.query.days) || Number(process.env.SESSION_RETENTION_DAYS) || 30;
+    const threshold = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const result = await Session.deleteMany({
+      scheduledTime: { $lt: threshold },
+      $or: [{ seniorId: userId }, { juniorId: userId }],
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Deleted ${result.deletedCount} sessions older than ${days} days for the current user.`,
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Clear old sessions globally (internal utility used by server scheduling)
+ */
+const clearOldSessionsGlobal = async (days = Number(process.env.SESSION_RETENTION_DAYS) || 30) => {
+  const threshold = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const result = await Session.deleteMany({
+    scheduledTime: { $lt: threshold },
+  });
+  console.log(`Cleared ${result.deletedCount} sessions older than ${days} days (global cleanup).`);
+  return result.deletedCount;
+};
+
+/**
  * @desc    Get a single session by ID
  * @route   GET /api/sessions/:sessionId
  * @access  Private
@@ -357,4 +395,6 @@ module.exports = {
   getSessions,
   getSession,
   completeSession,
+  clearOldSessionsForUser,
+  clearOldSessionsGlobal,
 };

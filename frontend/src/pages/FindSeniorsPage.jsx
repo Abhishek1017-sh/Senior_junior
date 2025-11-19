@@ -5,6 +5,7 @@ import userService from '../services/userService';
 import { useAuth } from '../context/AuthContext';
 import { SKILL_CATEGORIES } from '../utils/constants';
 import { debounce } from '../utils/helpers';
+import Container from '../components/Container';
 
 const FindSeniorsPage = () => {
   const { user, updateUser, refetchUser } = useAuth();
@@ -90,7 +91,8 @@ const FindSeniorsPage = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <Container>
+      <div className="space-y-6">
       {/* Header */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Find Mentors</h1>
@@ -183,7 +185,7 @@ const FindSeniorsPage = () => {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {seniors.map((senior) => (
                 <SeniorCard 
                   key={senior._id} 
@@ -249,7 +251,8 @@ const FindSeniorsPage = () => {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </Container>
   );
 };
 

@@ -5,6 +5,7 @@ const {
   getUserProfile,
   updateProfile,
   uploadProfilePicture,
+  removeProfilePicture,
 } = require('../controllers/userController');
 const { isAuthenticated } = require('../middleware/auth');
 const { validateProfileUpdate } = require('../middleware/validation');
@@ -25,5 +26,8 @@ router.post(
   upload.single('profilePicture'),
   uploadProfilePicture
 );
+
+// Remove profile picture
+router.delete('/profile/picture', isAuthenticated, removeProfilePicture);
 
 module.exports = router;

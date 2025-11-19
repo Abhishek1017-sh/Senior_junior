@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
 import { FaCalendarAlt, FaClock, FaCheck, FaTimes, FaStar, FaComment } from 'react-icons/fa';
 import sessionService from '../services/sessionService';
+import { useAuth } from '../context/AuthContext';
 import reviewService from '../services/reviewService';
 import ReviewModal from '../components/ReviewModal';
 import CancelSessionModal from '../components/CancelSessionModal';
 import { formatDateTime } from '../utils/helpers';
+import Container from '../components/Container';
 import { SESSION_STATUS } from '../utils/constants';
 
 const MySessionsPage = () => {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('upcoming');
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false); // FIX: Add cancel modal state
@@ -27,6 +30,19 @@ const MySessionsPage = () => {
       console.error('Error fetching sessions:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleClearPastSessions = async () => {
+    if (!confirm('Are you sure you want to permanently clear past sessions older than 30 days?')) return;
+    try {
+      await sessionService.clearPastSessions();
+      // Refresh sessions after clearing
+      await fetchSessions();
+      alert('Past sessions cleared successfully.');
+    } catch (error) {
+      console.error('Error clearing past sessions:', error);
+      alert('Failed to clear past sessions');
     }
   };
 
@@ -117,7 +133,8 @@ const MySessionsPage = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <Container>
+      <div className="space-y-6">
       {/* Header */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">My Sessions</h1>
@@ -150,6 +167,14 @@ const MySessionsPage = () => {
             >
               Past Sessions
             </button>
+            <div className="ml-auto mr-4 flex items-center">
+              <button
+                onClick={handleClearPastSessions}
+                className="text-sm px-3 py-2 bg-gray-100 rounded-md hover:bg-gray-200"
+              >
+                Clear Past Sessions
+              </button>
+            </div>
           </nav>
         </div>
 
@@ -158,19 +183,34 @@ const MySessionsPage = () => {
           {filteredSessions.length > 0 ? (
             <div className="space-y-4">
               {filteredSessions.map((session) => (
-                <div key={session._id} className="border rounded-lg p-6">
+                <div key={session._id} className="border rounded-lg p-4 sm:p-6">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                     <div className="flex-1">
                       <div className="flex items-start space-x-4">
-                        <img
-                          src={session.seniorId?.profile?.profilePicture || '/default-avatar.png'}
-                          alt={session.seniorId?.profile?.firstName}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-
+                        {/* Determine which user to show (other participant). If the current logged-in user is the senior
+                            show the junior details; otherwise show the senior details. */}
+                        {(() => {
+                          const currentUserId = user?._id;
+                          const isViewingAsSenior = String(currentUserId) === String(session.seniorId?._id || session.seniorId);
+                          const participant = isViewingAsSenior ? session.juniorId : session.seniorId;
+                          return (
+                            <img
+                              src={participant?.profile?.profilePictureUrl || participant?.profile?.profilePicture || '/default-avatar.png'}
+                              alt={participant?.profile?.firstName || 'participant'}
+                              className="w-12 h-12 rounded-full object-cover"
+                            />
+                          );
+                        })()}
                         <div className="flex-1">
                           <h3 className="text-lg font-semibold text-gray-900">
-                            Session with {session.seniorId?.profile?.firstName} {session.seniorId?.profile?.lastName}
+                            {(() => {
+                              const currentUserId = user?._id;
+                              const isViewingAsSenior = String(currentUserId) === String(session.seniorId?._id || session.seniorId);
+                              const participant = isViewingAsSenior ? session.juniorId : session.seniorId;
+                              const first = participant?.profile?.firstName || participant?.username || 'Unknown';
+                              const last = participant?.profile?.lastName || '';
+                              return `Session with ${first} ${last}`;
+                            })()}
                           </h3>
                           <p className="text-gray-600">{session.topic}</p>
 
@@ -198,7 +238,7 @@ const MySessionsPage = () => {
                                 <FaComment className="text-red-600 mt-1 flex-shrink-0" />
                                 <div>
                                   <p className="text-sm font-medium text-red-900">
-                                    Cancellation Reason ({session.cancelledBy === 'senior' ? 'Senior' : 'You'})
+                                                          Cancellation Reason ({session.cancelledBy === 'senior' ? 'Senior' : 'You'})
                                   </p>
                                   <p className="text-sm text-red-700 mt-1">
                                     {session.cancellationReason}
@@ -216,24 +256,34 @@ const MySessionsPage = () => {
                         {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
                       </span>
 
-                      {activeTab === 'upcoming' && session.status === SESSION_STATUS.PENDING && (
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleConfirmSession(session._id)}
-                            className="flex items-center space-x-1 bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 text-sm"
-                          >
-                            <FaCheck />
-                            <span>Confirm</span>
-                          </button>
-                          <button
-                            onClick={() => handleCancelSession(session._id)}
-                            className="flex items-center space-x-1 bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 text-sm"
-                          >
-                            <FaTimes />
-                            <span>Cancel</span>
-                          </button>
-                        </div>
-                      )}
+                      {activeTab === 'upcoming' && session.status === SESSION_STATUS.PENDING && (String(user?._id) === String(session.seniorId?._id || session.seniorId) ? (
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleConfirmSession(session._id)}
+                              className="flex items-center space-x-1 bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 text-sm"
+                            >
+                              <FaCheck />
+                              <span>Confirm</span>
+                            </button>
+                            <button
+                              onClick={() => handleCancelSession(session._id)}
+                              className="flex items-center space-x-1 bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 text-sm"
+                            >
+                              <FaTimes />
+                              <span>Cancel</span>
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleCancelSession(session._id)}
+                              className="flex items-center space-x-1 bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 text-sm"
+                            >
+                              <FaTimes />
+                              <span>Cancel</span>
+                            </button>
+                          </div>
+                        ))}
 
                       {activeTab === 'upcoming' && session.status === SESSION_STATUS.CONFIRMED && (
                         <button
@@ -284,7 +334,12 @@ const MySessionsPage = () => {
           setSelectedSession(null);
         }}
         onConfirm={handleConfirmCancel}
-        sessionTitle={selectedSession ? `${selectedSession.topic} with ${selectedSession.seniorId?.profile?.firstName}` : ''}
+        sessionTitle={selectedSession ? `${selectedSession.topic} with ${(() => {
+          const currentUserId = user?._id;
+          const isViewingAsSenior = String(currentUserId) === String(selectedSession.seniorId?._id || selectedSession.seniorId);
+          const participant = isViewingAsSenior ? selectedSession.juniorId : selectedSession.seniorId;
+          return participant?.profile?.firstName || participant?.username || 'Unknown';
+        })()}` : ''}
       />
 
       {/* Review Modal */}
@@ -297,7 +352,8 @@ const MySessionsPage = () => {
         onSubmit={handleReviewSubmit}
         sessionId={selectedSession?._id}
       />
-    </div>
+      </div>
+    </Container>
   );
 };
 

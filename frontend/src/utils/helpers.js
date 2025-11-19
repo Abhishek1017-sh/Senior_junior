@@ -89,3 +89,29 @@ export const getInitials = (firstName, lastName) => {
   const last = lastName ? lastName.charAt(0).toUpperCase() : '';
   return first + last;
 };
+
+/**
+ * Mask an email address for public display. Shows first character of local-part
+ * and the full domain, e.g., "a***@gmail.com". Returns empty string if invalid.
+ */
+export const maskEmail = (email) => {
+  if (!email || typeof email !== 'string') return '';
+  const parts = email.split('@');
+  if (parts.length !== 2) return '';
+  const [local, domain] = parts;
+  if (local.length <= 1) return `*@${domain}`;
+  const first = local[0];
+  return `${first}***@${domain}`;
+};
+
+/**
+ * Generic string masker that shows first N and last M characters and masks the rest
+ */
+export const maskString = (value, { showFirst = 1, showLast = 0 } = {}) => {
+  if (!value || typeof value !== 'string') return '';
+  if (value.length <= showFirst + showLast) return '*'.repeat(value.length);
+  const first = value.slice(0, showFirst);
+  const last = showLast ? value.slice(-showLast) : '';
+  const middle = '*'.repeat(Math.max(3, value.length - showFirst - showLast));
+  return `${first}${middle}${last}`;
+};

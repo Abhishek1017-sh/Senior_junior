@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaCalendarAlt, FaComments, FaUsers, FaStar, FaClock } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import Container from '../components/Container';
 import sessionService from '../services/sessionService';
+import chatService from '../services/chatService';
 import { formatDateTime } from '../utils/helpers';
 
 const DashboardPage = () => {
@@ -15,6 +17,7 @@ const DashboardPage = () => {
     completedSessions: 0,
     averageRating: 0,
   });
+  const [recentMessages, setRecentMessages] = useState([]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -43,22 +46,34 @@ const DashboardPage = () => {
         setLoading(false);
       }
     };
+    // Fetch recent messages separately so dashboard loads independent data
+    const fetchRecentMessages = async () => {
+      try {
+        const convos = await chatService.getConversations();
+        const msgs = (convos || []).slice(0, 3).map((c) => ({
+          id: c._id,
+          from: c.participant?.profile?.firstName || c.participant?.username || 'Unknown',
+          message: c.lastMessage?.content || '',
+          time: new Date(c.lastMessage?.createdAt).toLocaleString(),
+        }));
+        setRecentMessages(msgs);
+      } catch (err) {
+        console.error('Failed to fetch recent messages', err);
+      }
+    };
 
     fetchDashboardData();
+    fetchRecentMessages();
   }, [user]);
 
   const upcomingSessions = sessions
-    .filter(session => {
-      const sessionDate = new Date(session.scheduledDate);
+      .filter(session => {
+      const sessionDate = new Date(session.scheduledTime);
       return sessionDate > new Date() && session.status === 'confirmed';
     })
     .slice(0, 3); // Show only next 3 upcoming sessions
 
-  const recentMessages = [
-    // Mock data - in real app, fetch from chat service
-    { id: 1, from: 'John Doe', message: 'Thanks for the great session!', time: '2 hours ago' },
-    { id: 2, from: 'Jane Smith', message: 'Looking forward to our meeting', time: '1 day ago' },
-  ];
+  // recentMessages state is fetched from chatService
 
   if (loading) {
     return (
@@ -69,7 +84,8 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <Container>
+      <div className="space-y-8">
       {/* Welcome Section */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -81,7 +97,7 @@ const DashboardPage = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center">
             <FaCalendarAlt className="text-blue-600 text-2xl mr-4" />
@@ -138,24 +154,33 @@ const DashboardPage = () => {
 
           {upcomingSessions.length > 0 ? (
             <div className="space-y-4">
-              {upcomingSessions.map((session) => (
-                <div key={session._id} className="border rounded-lg p-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium text-gray-900">
-                        Session with {session.senior?.profile?.firstName} {session.senior?.profile?.lastName}
-                      </h3>
-                      <p className="text-sm text-gray-600">{session.topic}</p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {formatDateTime(session.scheduledDate)}
-                      </p>
+              {upcomingSessions.map((session) => {
+                // Resolve participant display — senior vs junior
+                const senior = session.seniorId || session.senior;
+                const junior = session.juniorId || session.junior;
+                const currentUserId = user?._id;
+                const isViewingAsSenior = String(currentUserId) === String(senior?._id || senior);
+                const participant = isViewingAsSenior ? junior : senior;
+
+                return (
+                  <div key={session._id} className="border rounded-lg p-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium text-gray-900">
+                          Session with {participant?.profile?.firstName} {participant?.profile?.lastName}
+                        </h3>
+                        <p className="text-sm text-gray-600">{session.topic}</p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {formatDateTime(session.scheduledTime)}
+                        </p>
+                      </div>
+                      <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                        Confirmed
+                      </span>
                     </div>
-                    <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                      Confirmed
-                    </span>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-8">
@@ -190,7 +215,7 @@ const DashboardPage = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-medium text-gray-900">{message.from}</h3>
-                      <p className="text-sm text-gray-600">{message.message}</p>
+                      <p className="text-sm text-gray-600 break-words">{message.message}</p>
                     </div>
                     <span className="text-xs text-gray-500">{message.time}</span>
                   </div>
@@ -215,7 +240,7 @@ const DashboardPage = () => {
       {/* Quick Actions */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           <Link
             to="/find-seniors"
             className="bg-blue-600 text-white p-4 rounded-lg hover:bg-blue-700 transition-colors"
@@ -244,7 +269,8 @@ const DashboardPage = () => {
           </Link>
         </div>
       </div>
-    </div>
+      </div>
+    </Container>
   );
 };
 
