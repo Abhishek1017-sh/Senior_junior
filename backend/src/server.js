@@ -39,7 +39,11 @@ const io = new Server(server, {
 connectDB();
 
 // Middleware
-app.use(helmet()); // Security headers
+// Configure Helmet and allow cross-origin resource embedding for static assets like /uploads
+app.use(helmet({
+  // Other config left as default; allow cross-origin resource policy so images can load cross-origin
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 app.use(morgan('dev')); // Logging
 app.use(cors({
   // Allow the frontend dev server(s). Use FRONTEND_URL env var when provided.
@@ -65,8 +69,17 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Serve uploaded files statically
-app.use('/uploads', express.static('uploads'));
+// Serve uploaded files statically and ensure the correct CORS header for images
+app.use('/uploads', (req, res, next) => {
+  // Allow the dev frontend origins to embed images
+  // Allow all origins for static assets during development -- set a specific frontend origin in production if desired
+  res.header('Access-Control-Allow-Origin', '*');
+  // Further allow credentials if necessary (avoid with '*')
+  // res.header('Access-Control-Allow-Credentials', 'true');
+  // Allow cross-origin resource policy explicitly for images
+  res.header('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+}, express.static('uploads'));
 
 // API Routes
 app.get('/', (req, res) => {
