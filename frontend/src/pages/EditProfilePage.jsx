@@ -133,6 +133,12 @@ const EditProfilePage = () => {
           // ignore silently
         }
       }
+      // Force re-fetch of profile (with auth headers) so profile page shows fresh location
+      try {
+        await userService.getUserProfile(user._id);
+      } catch (e) {
+        // ignore
+      }
       navigate(`/profile/${user._id}`);
     } catch (err) {
       console.error('Error saving profile:', err);

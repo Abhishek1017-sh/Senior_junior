@@ -7,7 +7,7 @@ const {
   uploadProfilePicture,
   removeProfilePicture,
 } = require('../controllers/userController');
-const { isAuthenticated } = require('../middleware/auth');
+const { isAuthenticated, attachUserFromToken } = require('../middleware/auth');
 const { validateProfileUpdate } = require('../middleware/validation');
 const upload = require('../middleware/upload');
 
@@ -16,7 +16,8 @@ const router = express.Router();
 // Public routes
 
 router.get('/seniors', getAllSeniors);
-router.get('/:userId', getUserProfile);
+// Optional auth: attach user if token present so we can show owner-specific fields
+router.get('/:userId', attachUserFromToken, getUserProfile);
 
 // Protected routes
 router.put('/profile', isAuthenticated, validateProfileUpdate, updateProfile);

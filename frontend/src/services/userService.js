@@ -10,7 +10,7 @@ const getAuthHeaders = () => {
 const userService = {
   // Get user profile by ID
   getUserProfile: async (userId) => {
-    const response = await axios.get(`${API_BASE_URL}/users/${userId}`);
+    const response = await axios.get(`${API_BASE_URL}/users/${userId}`, { headers: getAuthHeaders() });
     return response.data;
   },
 

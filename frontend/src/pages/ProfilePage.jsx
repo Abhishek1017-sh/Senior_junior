@@ -24,12 +24,21 @@ const ProfilePage = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [localOverride, setLocalOverride] = useState(null); // NEW
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [reviews, setReviews] = useState([]);
 
   const fetchUserProfile = async () => {
     setLoading(true);
     try {
       const response = await userService.getUserProfile(userId);
       setUser(response.data);
+      // fetch reviews for this senior
+      try {
+        const reviewsRes = await reviewService.getUserReviews(userId);
+        setReviews(reviewsRes.data || []);
+      } catch (err) {
+        console.error('Failed to fetch reviews for user:', err);
+        setReviews([]);
+      }
     } catch (error) {
       console.error('Error fetching user profile:', error);
     } finally {
@@ -352,7 +361,13 @@ const ProfilePage = () => {
             <div className="mt-4 grid grid-cols-2 gap-4">
               <div className="flex items-center text-gray-600">
                 <FaMapMarkerAlt className="mr-2" />
-                <span>{isOwnProfile ? (user.profile?.location || 'Location not specified') : (user.profile?.location ? maskString(user.profile.location, { showFirst: 2 }) : 'Location not specified')}</span>
+                <span>
+                  {isOwnProfile
+                    ? (user.profile?.location || 'Location not specified')
+                    : (user.profile?.location
+                        ? (user.profile.location.includes('*') ? user.profile.location : maskString(user.profile.location, { showFirst: 2 }))
+                        : 'Location not specified')}
+                </span>
                 {!isOwnProfile && (
                   <span className="text-xs text-gray-400 ml-2">(Private)</span>
                 )}
@@ -398,6 +413,29 @@ const ProfilePage = () => {
               </div>
             </div>
           )}
+
+          {/* Reviews */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Reviews</h2>
+            {reviews.length > 0 ? (
+              <div className="space-y-4">
+                {reviews.map((review) => (
+                  <div key={review._id} className="border rounded-lg p-4">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="font-medium text-gray-900">{review.reviewerId?.profile?.firstName || review.reviewerId?.username}</h3>
+                        <p className="text-sm text-gray-600">{new Date(review.createdAt).toLocaleDateString()}</p>
+                        <div className="mt-2 text-sm text-gray-700">{review.comment}</div>
+                      </div>
+                      <div className="text-yellow-500 text-lg font-bold">{review.rating}★</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-600">No reviews yet. Be the first to leave one after a completed session.</p>
+            )}
+          </div>
 
           {/* Experience */}
           {user.seniorProfile?.experience && (
@@ -481,6 +519,14 @@ const ProfilePage = () => {
                   Leave a Review
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* If no completed sessions, add a hint on how to leave a review */}
+          {completedSessionsWithUser.length === 0 && !isOwnProfile && (
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Reviews</h2>
+              <p className="text-gray-600">You can leave a review after you have completed a session with this mentor. Go to <strong>My Sessions</strong> and leave a review for a completed session.</p>
             </div>
           )}
 

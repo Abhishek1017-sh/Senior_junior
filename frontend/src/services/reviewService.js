@@ -9,9 +9,9 @@ const reviewService = {
     return response.data;
   },
 
-  // Get reviews for a user
+  // Get reviews for a senior (changed route on backend)
   getUserReviews: async (userId) => {
-    const response = await axios.get(`${API_BASE_URL}/reviews/user/${userId}`);
+    const response = await axios.get(`${API_BASE_URL}/reviews/senior/${userId}`);
     return response.data;
   },
 

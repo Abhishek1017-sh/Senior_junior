@@ -74,3 +74,25 @@ module.exports = {
   isSenior,
   isJunior,
 };
+
+// Optional attach user middleware: decode token if present and attach `req.user`, but don't error if missing
+const attachUserFromToken = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization || req.cookies?.token;
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader;
+    if (!token) return next();
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded?.id || decoded?._id || decoded?.userId || decoded?.sub;
+    if (!userId) return next();
+
+    const user = await User.findById(userId).select('-password -socialLogins');
+    if (user) req.user = user;
+    return next();
+  } catch (err) {
+    // ignore errors – user remains unauthenticated; do not block the request
+    return next();
+  }
+};
+
+module.exports.attachUserFromToken = attachUserFromToken;

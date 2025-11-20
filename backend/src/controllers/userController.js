@@ -79,10 +79,18 @@ const getUserProfile = async (req, res, next) => {
     if (!req.user || String(req.user._id) !== String(user._id)) {
       // convert to plain object so we can delete fields safely
       returnUser = user.toObject();
-      // Remove email and precise location by default to respect privacy
+      // Remove email and mask precise location by default to respect privacy
       delete returnUser.email;
-      if (returnUser.profile) {
-        delete returnUser.profile.location;
+      if (returnUser.profile && returnUser.profile.location) {
+        const loc = returnUser.profile.location;
+        // Simple mask: keep first two characters and replace middle with asterisks
+        const show = 2;
+        if (loc.length <= show) {
+          returnUser.profile.location = '*'.repeat(loc.length);
+        } else {
+          const middle = '*'.repeat(Math.max(3, loc.length - show));
+          returnUser.profile.location = `${loc.slice(0, show)}${middle}`;
+        }
       }
     }
 

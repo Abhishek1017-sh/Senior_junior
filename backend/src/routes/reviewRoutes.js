@@ -17,19 +17,6 @@ router.get('/senior/:seniorId', getSeniorReviews);
 router.post('/', isAuthenticated, validateReview, submitReview);
 router.get('/my-reviews', isAuthenticated, getMyReviews);
 
-// Placeholder routes (actual controller implementation needed)
-router.post('/', isAuthenticated, (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Review submitted successfully',
-  });
-});
-
-router.get('/senior/:seniorId', (req, res) => {
-  res.status(200).json({
-    success: true,
-    data: [],
-  });
-});
+// No placeholder routes — use controller implementations above
 
 module.exports = router;
