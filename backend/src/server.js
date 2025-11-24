@@ -20,6 +20,7 @@ const connectionRoutes = require('./routes/connectionRoutes');
 const sessionRoutes = require('./routes/sessionRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const reportRoutes = require('./routes/reportRoutes');
 
 // Initialize express app
 const app = express();
@@ -96,6 +97,7 @@ app.use('/api/connections', connectionRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/reports', reportRoutes);
 
 // Initialize Socket.io for chat
 initializeSocket(io);
