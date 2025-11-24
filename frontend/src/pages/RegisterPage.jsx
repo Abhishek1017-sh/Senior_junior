@@ -53,7 +53,8 @@ const RegisterPage = () => {
       const API_URL = import.meta.env.VITE_API_BASE_URL.replace('/api', '');
       window.location.href = `${API_URL}/api/auth/google`;
     } else if (provider === 'github') {
-      window.location.href = 'http://localhost:5000/api/auth/github';
+      const API_URL = import.meta.env.VITE_API_BASE_URL.replace('/api', '');
+      window.location.href = `${API_URL}/api/auth/github`;
     }
   };
 
