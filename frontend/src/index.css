@@ -29,6 +29,12 @@ body {
 
 .card-surface { background-color: rgba(255,255,255,0.9); }
 
+/* Utility: improved focus ring for interactive elements */
+.focus-ring:focus { outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.18); border-radius: 6px; }
+
+/* Slightly more elevated cards */
+.elevated { box-shadow: 0 10px 30px rgba(15,23,42,0.08); }
+
 .glass-card {
 	background-color: rgba(255,255,255,0.85);
 	-webkit-backdrop-filter: blur(6px);

@@ -86,10 +86,10 @@ const DashboardPage = () => {
   return (
     <>
       {/* Full-bleed hero */}
-      <section className="dashboard-hero relative overflow-hidden w-full">
+      <section className="dashboard-hero relative overflow-hidden w-full" aria-labelledby="dashboard-hero-heading" role="region">
         <div className="absolute inset-0 bg-gradient-to-r from-primary-800/70 via-transparent to-accent-600/30" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 text-white">
-          <h1 className="text-3xl md:text-4xl font-extrabold mb-2 drop-shadow">
+          <h1 id="dashboard-hero-heading" className="text-3xl md:text-4xl font-extrabold mb-2 drop-shadow">
             Welcome back, {user?.profile?.firstName}!
           </h1>
           <p className="text-sm md:text-lg text-blue-100/90 max-w-2xl">
@@ -128,8 +128,9 @@ const DashboardPage = () => {
         <div className="grid md:grid-cols-2 gap-8">
         {/* Upcoming Sessions */}
         <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+          <div role="region" aria-labelledby="upcoming-sessions-heading">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Upcoming Sessions</h2>
+            <h2 id="upcoming-sessions-heading" className="text-xl font-semibold text-gray-900">Upcoming Sessions</h2>
             <Link
               to="/my-sessions"
               className="text-blue-600 hover:text-blue-800 text-sm"
@@ -180,6 +181,7 @@ const DashboardPage = () => {
               </Link>
             </div>
           )}
+          </div>
         </div>
 
         {/* Recent Messages */}
@@ -225,7 +227,7 @@ const DashboardPage = () => {
 
         {/* Quick Actions */}
         <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <Link to="/find-seniors" className="bg-gradient-to-r from-blue-600 to-blue-500 text-white p-4 rounded-lg hover:scale-[1.02] transform transition">
               <div className="flex items-center space-x-4">
@@ -251,7 +253,7 @@ const DashboardPage = () => {
               </div>
             </Link>
 
-            <Link to="/chat" className="bg-gradient-to-r from-purple-600 to-purple-500 text-white p-4 rounded-lg hover:scale-[1.02] transform transition">
+            <Link to="/chat" aria-label="Start Chat" className="bg-gradient-to-r from-purple-600 to-purple-500 text-white p-4 rounded-lg hover:scale-[1.02] transform transition focus:outline-none focus:ring-2 focus:ring-primary-400">
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
                   <FaComments className="text-white text-xl" />

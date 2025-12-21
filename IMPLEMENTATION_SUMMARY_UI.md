@@ -25,3 +25,15 @@ Next steps / Follow up
 - Iterate on color tokens and accessibility contrast checks (optional: add axe/lighthouse CI checks).
 
 If you'd like, I can now open a preview PR with before/after screenshots and details for reviewers.
+
+PR Checklist
+----------
+- [ ] Manual: Confirm navbar doesn't overlap content on desktop and mobile
+- [ ] Manual: Confirm hero is full-bleed and cards are constrained/responsive
+- [ ] Automated: Snapshot test added for Dashboard layout (`src/pages/__tests__/DashboardPage.snapshot.test.jsx`)
+- [ ] Automated: a11y test added (skips if `jest-axe` is not installed)
+- [ ] Manual: Verify keyboard focus & mobile nav toggling
+
+Notes
+-----
+- The Vitest intermittent worker OOM is unrelated to these UI changes; tests pass locally but CI may still see occasional worker OOM errors. See `tools/` for heap snapshot tooling used during investigation.

@@ -23,7 +23,7 @@ function AppRoutes() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       {/* Add top padding equal to navbar height to avoid overlap */}
-      <main className="container mx-auto px-4 py-8 pt-20 md:pt-24">
+      <main role="main" aria-label="Application content" className="container mx-auto px-4 py-8 pt-20 md:pt-24">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />

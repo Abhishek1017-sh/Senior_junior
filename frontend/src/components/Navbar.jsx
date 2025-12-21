@@ -2,7 +2,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useChat } from '../context/ChatContext';
 import { useNotifications } from '../context/NotificationContext';
-import { FaUser, FaSignOutAlt, FaHome, FaUsers, FaCalendarAlt, FaComments, FaUserFriends } from 'react-icons/fa';
+import { FaUser, FaSignOutAlt, FaHome, FaUsers, FaCalendarAlt, FaComments, FaUserFriends, FaBars, FaTimes } from 'react-icons/fa';
+import { useState } from 'react';
 
 const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuth();
@@ -15,15 +16,17 @@ const Navbar = () => {
     navigate('/');
   };
 
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-sm shadow-soft h-16 md:h-20">
+    <nav className="fixed top-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-sm shadow-soft h-16 md:h-20" aria-label="Primary navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
         <div className="flex justify-between items-center h-full">
           <Link to="/" className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-accent-500">
             Senior-Junior Connect
           </Link>
 
-          <div className="flex items-center space-x-3">
+          <div className="hidden md:flex items-center space-x-3">
             {isAuthenticated ? (
               <>
                 <Link to="/dashboard" className="flex items-center space-x-1 text-gray-700 hover:text-primary-600">
@@ -97,15 +100,40 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <Link to="/login" className="px-4 py-2 rounded-md text-primary-700 hover:text-primary-800 border border-primary-200 bg-white">
+                <Link to="/login" aria-label="Login" className="px-4 py-2 rounded-md text-primary-700 hover:text-primary-800 border border-primary-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-400">
                   Login
                 </Link>
-                <Link to="/register" className="px-4 py-2 rounded-md text-white bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600">
+                <Link to="/register" aria-label="Register" className="px-4 py-2 rounded-md text-white bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-400">
                   Register
                 </Link>
               </>
             )}
           </div>
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+            <button aria-controls="mobile-menu" aria-expanded={mobileOpen} aria-label={mobileOpen ? 'Close menu' : 'Open menu'} onClick={() => setMobileOpen(!mobileOpen)} className="p-2 rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-400">
+              {mobileOpen ? <FaTimes /> : <FaBars />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile menu panel */}
+      <div id="mobile-menu" data-testid="mobile-menu" className={`md:hidden bg-white/95 border-t border-gray-100 ${mobileOpen ? 'block' : 'hidden'}`}>
+        <div className="px-4 py-3 space-y-2">
+          <Link to="/dashboard" className="block px-2 py-2 rounded-md text-gray-700 hover:bg-gray-50">Dashboard</Link>
+          <Link to="/find-seniors" className="block px-2 py-2 rounded-md text-gray-700 hover:bg-gray-50">Find Seniors</Link>
+          <Link to="/connections" className="block px-2 py-2 rounded-md text-gray-700 hover:bg-gray-50">Connections</Link>
+          <Link to="/my-sessions" className="block px-2 py-2 rounded-md text-gray-700 hover:bg-gray-50">My Sessions</Link>
+          <Link to="/chat" className="block px-2 py-2 rounded-md text-gray-700 hover:bg-gray-50">Chat</Link>
+          {isAuthenticated ? (
+            <button onClick={handleLogout} className="w-full text-left px-2 py-2 rounded-md text-gray-700 hover:bg-gray-50">Logout</button>
+          ) : (
+            <div className="flex gap-2">
+              <Link to="/login" className="px-3 py-2 rounded-md text-primary-700 border border-primary-200 bg-white">Login</Link>
+              <Link to="/register" className="px-3 py-2 rounded-md text-white bg-gradient-to-r from-primary-600 to-primary-500">Register</Link>
+            </div>
+          )}
         </div>
       </div>
     </nav>
