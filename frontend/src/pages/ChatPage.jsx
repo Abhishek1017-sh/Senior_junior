@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FaSearch, FaPaperPlane } from 'react-icons/fa';
 import ChatWindow from '../components/ChatWindow';
@@ -21,13 +21,33 @@ const ChatPage = () => {
 
   const hasFetched = useRef(false);
 
+  const handleSelectConversation = useCallback(async (conversation) => {
+    if (!conversation?.participant?._id) return;
+    setSelectedConversation(conversation);
+    // Join chat - useSocket handles queuing if not connected
+    joinChat(conversation.participant._id);
+    markMessagesAsRead(conversation.participant._id);
+    // mark as read server-side
+    try {
+      await chatService.markAsRead(conversation.participant._id);
+    } catch (e) {
+      console.error('Failed to mark as read', e);
+    }
+  }, [joinChat, markMessagesAsRead]);
+
+  
+
   useEffect(() => {
     if (location.state?.recipient && conversations.length > 0) {
       const recipient = location.state.recipient;
       const foundConversation = conversations.find(c => String(c.participant._id) === String(recipient._id));
 
       if (foundConversation) {
-        handleSelectConversation(foundConversation);
+        // Inline the selection logic here to avoid depending on the stable callback
+        setSelectedConversation(foundConversation);
+        joinChat(foundConversation.participant._id);
+        markMessagesAsRead(foundConversation.participant._id);
+        chatService.markAsRead(foundConversation.participant._id).catch((e) => console.error('Failed to mark as read', e));
       } else {
         const conversation = {
           _id: recipient._id,
@@ -46,7 +66,7 @@ const ChatPage = () => {
 
       navigate(location.pathname, { replace: true });
     }
-  }, [location.state?.recipient, conversations]);
+  }, [location.state?.recipient, conversations, navigate, joinChat, handleSelectConversation, location.pathname, markMessagesAsRead]);
 
   useEffect(() => {
     if (user && !hasFetched.current) {
@@ -116,15 +136,7 @@ const ChatPage = () => {
     }
   };
 
-  const handleSelectConversation = async (conversation) => {
-    if (!conversation?.participant?._id) return;
-    setSelectedConversation(conversation);
-    // Join chat - useSocket handles queuing if not connected
-    joinChat(conversation.participant._id);
-    markMessagesAsRead(conversation.participant._id);
-    // mark as read server-side
-    try { await chatService.markAsRead(conversation.participant._id); } catch (e) {}
-  };
+  
 
   const handleSendMessage = (content) => {
     if (selectedConversation) {

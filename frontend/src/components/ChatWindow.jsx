@@ -48,17 +48,15 @@ const ChatWindow = ({ recipient, messages, onSendMessage, isTyping, onBack }) =>
     try {
       await reportService.submitReport(reportData);
       // friendly feedback
-      // eslint-disable-next-line no-alert
       alert('Report submitted successfully. Thank you — our moderators will review it.');
     } catch (err) {
       console.error('Failed to submit report', err);
-      // eslint-disable-next-line no-alert
       alert('Failed to submit report. Please try again later.');
     }
   };
 
   const formatTime = (timestamp) => {
-    const ts = timestamp || message?.createdAt;
+    const ts = timestamp;
     if (!ts) return '';
     const d = new Date(ts);
     if (isNaN(d)) return '';

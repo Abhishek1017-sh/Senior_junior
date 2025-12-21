@@ -5,6 +5,12 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const sessionService = {
   // Get user's sessions
   getUserSessions: async () => {
+    // In test environments we may not have an API base URL set. Short-circuit
+    // to avoid making real network requests during unit tests (prevents
+    // noisy jsdom XHR errors and large console output that can contribute
+    // to worker memory pressure).
+    if (!API_BASE_URL) return { data: [] };
+
     const response = await axios.get(`${API_BASE_URL}/sessions`);
     return response.data;
   },

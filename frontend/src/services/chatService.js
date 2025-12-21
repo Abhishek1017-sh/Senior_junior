@@ -5,12 +5,18 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const chatService = {
   // Get user's chat conversations
   getConversations: async () => {
+    // Short-circuit in test environments to avoid network calls when API is
+    // not configured.
+    if (!API_BASE_URL) return [];
+
     const response = await axios.get(`${API_BASE_URL}/chat/conversations`);
     return response.data.data || [];
   },
 
   // Get messages for a specific conversation
   getMessages: async (recipientId) => {
+    if (!API_BASE_URL) return [];
+
     const response = await axios.get(`${API_BASE_URL}/chat/messages/${recipientId}`);
     return response.data.data || [];
   },

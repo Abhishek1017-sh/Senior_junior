@@ -67,11 +67,11 @@ const useSocket = (initialUnreadCounts = new Map()) => {
       });
 
       // Listen for server typing vs stopped typing names
-      socket.on('userTyping', (payload) => {
+      socket.on('userTyping', () => {
         // optional typing indicator state handling (not included here)
       });
 
-      socket.on('userStoppedTyping', (payload) => {
+      socket.on('userStoppedTyping', () => {
         // optional stop typing handling
       });
 

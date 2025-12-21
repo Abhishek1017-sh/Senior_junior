@@ -8,7 +8,7 @@ import { debounce } from '../utils/helpers';
 import Container from '../components/Container';
 
 const FindSeniorsPage = () => {
-  const { user, updateUser, refetchUser } = useAuth();
+  const { user, refetchUser } = useAuth();
   const [seniors, setSeniors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -58,9 +58,7 @@ const FindSeniorsPage = () => {
     }
   };
 
-  useEffect(() => {
-    fetchSeniors(currentPage, searchQuery, selectedSkills);
-  }, [currentPage]);
+  // Page changes are handled by the main effect above which listens to currentPage, searchQuery and selectedSkills
 
   const debouncedSearch = debounce((query) => {
     setSearchQuery(query);

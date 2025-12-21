@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useMemo } from 'react';
+/* eslint-disable react-refresh/only-export-components */
 import useSocket from '../hooks/useSocket';
 
 const ChatContext = createContext();

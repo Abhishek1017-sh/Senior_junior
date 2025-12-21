@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaCalendarAlt, FaComments, FaUsers, FaStar, FaClock } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
-import Container from '../components/Container';
+// Dashboard uses full-bleed hero + constrained content width for cards
 import sessionService from '../services/sessionService';
 import chatService from '../services/chatService';
 import { formatDateTime } from '../utils/helpers';
@@ -84,64 +84,50 @@ const DashboardPage = () => {
   }
 
   return (
-    <Container>
-      <div className="space-y-8">
-      {/* Welcome Section */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Welcome back, {user?.profile?.firstName}!
-        </h1>
-        <p className="text-gray-600">
-          Here's an overview of your mentorship activities.
-        </p>
-      </div>
+    <>
+      {/* Full-bleed hero */}
+      <section className="dashboard-hero relative overflow-hidden w-full">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary-800/70 via-transparent to-accent-600/30" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 text-white">
+          <h1 className="text-3xl md:text-4xl font-extrabold mb-2 drop-shadow">
+            Welcome back, {user?.profile?.firstName}!
+          </h1>
+          <p className="text-sm md:text-lg text-blue-100/90 max-w-2xl">
+            Here's a quick snapshot of your mentorship activities — sessions, messages, and quick actions to keep you moving forward.
+          </p>
+        </div>
+      </section>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center">
-            <FaCalendarAlt className="text-blue-600 text-2xl mr-4" />
-            <div>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalSessions}</p>
-              <p className="text-gray-600">Total Sessions</p>
-            </div>
-          </div>
+      {/* Constrained content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+          {[
+            { icon: FaCalendarAlt, label: 'Total Sessions', value: stats.totalSessions },
+            { icon: FaClock, label: 'Upcoming', value: stats.upcomingSessions },
+            { icon: FaUsers, label: 'Completed', value: stats.completedSessions },
+            { icon: FaStar, label: 'Avg Rating', value: stats.averageRating.toFixed(1) },
+          ].map((card) => {
+            const Icon = card.icon;
+            return (
+              <div key={card.label} className="bg-white/80 backdrop-blur-sm border border-white/30 rounded-lg p-6 shadow-md hover:shadow-lg transform hover:-translate-y-1 transition min-w-0">
+                <div className="flex items-center">
+                  <div className="p-3 rounded-full bg-white/20 mr-4">
+                    <Icon className="text-blue-700 text-2xl" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-gray-900">{card.value}</p>
+                    <p className="text-gray-600">{card.label}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center">
-            <FaClock className="text-green-600 text-2xl mr-4" />
-            <div>
-              <p className="text-2xl font-bold text-gray-900">{stats.upcomingSessions}</p>
-              <p className="text-gray-600">Upcoming</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center">
-            <FaUsers className="text-purple-600 text-2xl mr-4" />
-            <div>
-              <p className="text-2xl font-bold text-gray-900">{stats.completedSessions}</p>
-              <p className="text-gray-600">Completed</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center">
-            <FaStar className="text-yellow-600 text-2xl mr-4" />
-            <div>
-              <p className="text-2xl font-bold text-gray-900">{stats.averageRating.toFixed(1)}</p>
-              <p className="text-gray-600">Avg Rating</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-8">
         {/* Upcoming Sessions */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-gray-900">Upcoming Sessions</h2>
             <Link
@@ -163,10 +149,10 @@ const DashboardPage = () => {
                 const participant = isViewingAsSenior ? junior : senior;
 
                 return (
-                  <div key={session._id} className="border rounded-lg p-4">
+                  <div key={session._id} className="border rounded-lg p-4 min-w-0">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="font-medium text-gray-900">
+                        <h3 className="font-medium text-gray-900 break-words">
                           Session with {participant?.profile?.firstName} {participant?.profile?.lastName}
                         </h3>
                         <p className="text-sm text-gray-600">{session.topic}</p>
@@ -197,7 +183,7 @@ const DashboardPage = () => {
         </div>
 
         {/* Recent Messages */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-gray-900">Recent Messages</h2>
             <Link
@@ -211,10 +197,10 @@ const DashboardPage = () => {
           {recentMessages.length > 0 ? (
             <div className="space-y-4">
               {recentMessages.map((message) => (
-                <div key={message.id} className="border rounded-lg p-4">
+                <div key={message.id} className="border rounded-lg p-4 min-w-0">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-medium text-gray-900">{message.from}</h3>
+                      <h3 className="font-medium text-gray-900 break-words">{message.from}</h3>
                       <p className="text-sm text-gray-600 break-words">{message.message}</p>
                     </div>
                     <span className="text-xs text-gray-500">{message.time}</span>
@@ -235,42 +221,51 @@ const DashboardPage = () => {
             </div>
           )}
         </div>
-      </div>
+        </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+        {/* Quick Actions */}
+        <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          <Link
-            to="/find-seniors"
-            className="bg-blue-600 text-white p-4 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <FaUsers className="text-2xl mb-2" />
-            <h3 className="font-semibold">Find Mentors</h3>
-            <p className="text-sm opacity-90">Discover experienced professionals</p>
-          </Link>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <Link to="/find-seniors" className="bg-gradient-to-r from-blue-600 to-blue-500 text-white p-4 rounded-lg hover:scale-[1.02] transform transition">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <FaUsers className="text-white text-xl" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Find Mentors</h3>
+                  <p className="text-sm opacity-90">Discover experienced professionals</p>
+                </div>
+              </div>
+            </Link>
 
-          <Link
-            to="/my-sessions"
-            className="bg-green-600 text-white p-4 rounded-lg hover:bg-green-700 transition-colors"
-          >
-            <FaCalendarAlt className="text-2xl mb-2" />
-            <h3 className="font-semibold">Manage Sessions</h3>
-            <p className="text-sm opacity-90">View and manage your bookings</p>
-          </Link>
+            <Link to="/my-sessions" className="bg-gradient-to-r from-green-600 to-green-500 text-white p-4 rounded-lg hover:scale-[1.02] transform transition">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <FaCalendarAlt className="text-white text-xl" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Manage Sessions</h3>
+                  <p className="text-sm opacity-90">View and manage your bookings</p>
+                </div>
+              </div>
+            </Link>
 
-          <Link
-            to="/chat"
-            className="bg-purple-600 text-white p-4 rounded-lg hover:bg-purple-700 transition-colors"
-          >
-            <FaComments className="text-2xl mb-2" />
-            <h3 className="font-semibold">Start Chat</h3>
-            <p className="text-sm opacity-90">Connect with mentors and peers</p>
-          </Link>
+            <Link to="/chat" className="bg-gradient-to-r from-purple-600 to-purple-500 text-white p-4 rounded-lg hover:scale-[1.02] transform transition">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <FaComments className="text-white text-xl" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Start Chat</h3>
+                  <p className="text-sm opacity-90">Connect with mentors and peers</p>
+                </div>
+              </div>
+            </Link>
+          </div>
         </div>
       </div>
-      </div>
-    </Container>
+    </>
   );
 };
 

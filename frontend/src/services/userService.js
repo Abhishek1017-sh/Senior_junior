@@ -10,6 +10,8 @@ const getAuthHeaders = () => {
 const userService = {
   // Get user profile by ID
   getUserProfile: async (userId) => {
+    if (!API_BASE_URL) return { data: null };
+
     const response = await axios.get(`${API_BASE_URL}/users/${userId}`, { headers: getAuthHeaders() });
     return response.data;
   },
@@ -17,6 +19,8 @@ const userService = {
   // Get all seniors with optional search
   getSeniors: async (params = {}) => {
     const queryParams = new URLSearchParams(params);
+    if (!API_BASE_URL) return { data: [] };
+
     const response = await axios.get(`${API_BASE_URL}/users/seniors?${queryParams}`);
     return response.data;
   },
@@ -31,12 +35,16 @@ const userService = {
 
   // Get user connections
   getConnections: async () => {
+    if (!API_BASE_URL) return { data: { data: [] } };
+
     const response = await axios.get(`${API_BASE_URL}/connections`, { headers: getAuthHeaders() });
     return response.data.data || [];
   },
 
   // Get pending connection requests
   getPendingConnections: async () => {
+    if (!API_BASE_URL) return { data: { data: [] } };
+
     const response = await axios.get(`${API_BASE_URL}/connections/pending`, { headers: getAuthHeaders() });
     return response.data.data || [];
   },

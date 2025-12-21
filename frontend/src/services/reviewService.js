@@ -11,6 +11,9 @@ const reviewService = {
 
   // Get reviews for a senior (changed route on backend)
   getUserReviews: async (userId) => {
+    // Avoid network calls in test environment when API base is not configured
+    if (!API_BASE_URL) return { data: [] };
+
     const response = await axios.get(`${API_BASE_URL}/reviews/senior/${userId}`);
     return response.data;
   },

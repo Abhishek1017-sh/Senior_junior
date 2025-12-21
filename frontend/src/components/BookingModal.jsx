@@ -39,7 +39,7 @@ const BookingModal = ({ isOpen, onClose, onSubmit, senior }) => {
   const availabilitySlots = [
     { id: '1', date: '2025-10-25', time: '10:00 AM', duration: '60 min' },
     { id: '2', date: '2025-10-25', time: '2:00 PM', duration: '60 min' },
-    { id: '3', date: '2025-10-26', date: '3:00 PM', duration: '60 min' },
+    { id: '3', date: '2025-10-26', time: '3:00 PM', duration: '60 min' },
     { id: '4', date: '2025-10-27', time: '11:00 AM', duration: '60 min' },
   ];
 
