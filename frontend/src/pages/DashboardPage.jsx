@@ -88,7 +88,7 @@ const DashboardPage = () => {
       {/* Full-bleed hero */}
       <section className="dashboard-hero relative overflow-hidden w-full" aria-labelledby="dashboard-hero-heading" role="region">
         <div className="absolute inset-0 bg-gradient-to-r from-primary-800/70 via-transparent to-accent-600/30" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 text-white">
+        <div className="relative w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 text-white">
           <h1 id="dashboard-hero-heading" className="text-3xl md:text-4xl font-extrabold mb-2 drop-shadow">
             Welcome back, {user?.profile?.firstName}!
           </h1>
@@ -99,7 +99,7 @@ const DashboardPage = () => {
       </section>
 
       {/* Constrained content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-8">
+      <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           {[
@@ -110,7 +110,7 @@ const DashboardPage = () => {
           ].map((card) => {
             const Icon = card.icon;
             return (
-              <div key={card.label} className="bg-white/80 backdrop-blur-sm border border-white/30 rounded-lg p-6 shadow-md hover:shadow-lg transform hover:-translate-y-1 transition min-w-0">
+              <div key={card.label} className="card-surface backdrop-blur-sm border-transparent p-6 shadow-md hover:shadow-lg transform hover:-translate-y-1 transition min-w-0">
                 <div className="flex items-center">
                   <div className="p-3 rounded-full bg-white/20 mr-4">
                     <Icon className="text-blue-700 text-2xl" />
@@ -127,7 +127,7 @@ const DashboardPage = () => {
 
         <div className="grid md:grid-cols-2 gap-8">
         {/* Upcoming Sessions */}
-        <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+        <div className="card-surface rounded-lg shadow-md p-6 hover:shadow-lg transition">
           <div role="region" aria-labelledby="upcoming-sessions-heading">
           <div className="flex justify-between items-center mb-4">
             <h2 id="upcoming-sessions-heading" className="text-xl font-semibold text-gray-900">Upcoming Sessions</h2>
@@ -137,7 +137,7 @@ const DashboardPage = () => {
             >
               View all
             </Link>
-          </div>
+          </div> 
 
           {upcomingSessions.length > 0 ? (
             <div className="space-y-4">
@@ -185,7 +185,7 @@ const DashboardPage = () => {
         </div>
 
         {/* Recent Messages */}
-        <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+        <div className="card-surface rounded-lg shadow-md p-6 hover:shadow-lg transition">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-gray-900">Recent Messages</h2>
             <Link
@@ -194,7 +194,7 @@ const DashboardPage = () => {
             >
               View all
             </Link>
-          </div>
+          </div> 
 
           {recentMessages.length > 0 ? (
             <div className="space-y-4">
@@ -226,7 +226,7 @@ const DashboardPage = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="card-surface rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <Link to="/find-seniors" className="bg-gradient-to-r from-blue-600 to-blue-500 text-white p-4 rounded-lg hover:scale-[1.02] transform transition">

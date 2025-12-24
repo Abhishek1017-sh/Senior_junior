@@ -153,7 +153,7 @@ const EditProfilePage = () => {
     <Container className="max-w-2xl">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Edit Profile</h1>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="card-surface rounded-lg shadow-md p-6 space-y-6">
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
             {error}

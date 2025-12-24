@@ -52,7 +52,7 @@ const HomePage = () => {
 
       {/* Features Section */}
       <section className="grid md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-md p-6 text-center">
+        <div className="card-surface rounded-lg shadow-md p-6 text-center">
           <FaUsers className="text-blue-600 text-4xl mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Find Mentors</h3>
           <p className="text-gray-600">
@@ -60,7 +60,7 @@ const HomePage = () => {
           </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6 text-center">
+        <div className="card-surface rounded-lg shadow-md p-6 text-center">
           <FaCalendarAlt className="text-green-600 text-4xl mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Book Sessions</h3>
           <p className="text-gray-600">
@@ -68,7 +68,7 @@ const HomePage = () => {
           </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6 text-center">
+        <div className="card-surface rounded-lg shadow-md p-6 text-center">
           <FaComments className="text-purple-600 text-4xl mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Real-time Chat</h3>
           <p className="text-gray-600">
@@ -76,7 +76,7 @@ const HomePage = () => {
           </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6 text-center">
+        <div className="card-surface rounded-lg shadow-md p-6 text-center">
           <FaStar className="text-yellow-600 text-4xl mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Rate & Review</h3>
           <p className="text-gray-600">
@@ -86,7 +86,7 @@ const HomePage = () => {
       </section>
 
       {/* How It Works Section */}
-      <section className="bg-white rounded-lg shadow-md p-12">
+      <section className="card-surface rounded-lg shadow-md p-12">
         <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">How It Works</h2>
         <div className="grid md:grid-cols-3 gap-8">
           <div>

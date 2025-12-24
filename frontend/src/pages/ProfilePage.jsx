@@ -227,7 +227,7 @@ const ProfilePage = () => {
       <Container className="max-w-4xl">
         <div className="space-y-6">
       {/* Profile Header */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="card-surface rounded-lg shadow-md p-6">
         <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
           <img
             src={user.profile?.profilePictureUrl || '/default-avatar.png'}
