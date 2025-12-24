@@ -19,7 +19,7 @@ const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-40 site-nav backdrop-blur-sm shadow-soft h-16 md:h-20" aria-label="Primary navigation">
+    <nav className="fixed top-0 left-0 right-0 z-40 site-nav bg-[#0b1220] shadow-soft h-16 md:h-20" aria-label="Primary navigation">
       <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
         <div className="flex justify-between items-center h-full">
           <Link to="/" className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-accent-500">
@@ -75,7 +75,7 @@ const Navbar = () => {
                     <span>{user?.username}</span>
                   </button>
 
-                  <div className="absolute right-0 mt-2 w-48 bg-[#0b1220]/95 border border-white/10 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 translate-y-1 transition-all duration-200 z-50 overflow-hidden">
+                    <div className="absolute right-0 mt-2 w-48 bg-[#0b1220] border border-white/10 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 translate-y-1 transition-all duration-200 z-50 overflow-hidden">
                     <Link
                       to={`/profile/${user?._id}`}
                       className="block px-4 py-2 text-sm text-white/90 hover:bg-white/6"
@@ -119,7 +119,7 @@ const Navbar = () => {
       </div>
 
       {/* Mobile menu panel */}
-      <div id="mobile-menu" data-testid="mobile-menu" className={`md:hidden site-nav-mobile ${mobileOpen ? 'block' : 'hidden'}`}>
+      <div id="mobile-menu" data-testid="mobile-menu" className={`md:hidden site-nav-mobile ${mobileOpen ? 'block' : 'hidden'} bg-[#0b1220]`}>
         <div className="px-4 py-3 space-y-2">
           <Link to="/dashboard" className="block px-2 py-2 rounded-md text-white hover:bg-white/5">Dashboard</Link>
           <Link to="/find-seniors" className="block px-2 py-2 rounded-md text-white hover:bg-white/5">Find Seniors</Link>
