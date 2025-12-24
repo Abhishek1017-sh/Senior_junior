@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`DashboardPage snapshot > matches DOM snapshot 1`] = `
+<div
+  class="flex justify-center items-center min-h-screen"
+>
+  <div
+    class="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"
+  />
+</div>
+`;

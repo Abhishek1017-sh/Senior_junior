@@ -1,9 +1,15 @@
+import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import ProfilePage from '../ProfilePage';
+import { MemoryRouter } from 'react-router-dom';
 import userService from '../../services/userService';
 
-vi.mock('../../services/userService', () => ({ getUserProfile: vi.fn() }));
+vi.mock('../../services/userService', () => ({
+  default: {
+    getUserProfile: vi.fn(),
+  }
+}));
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -24,7 +30,7 @@ describe('ProfilePage', () => {
   it('shows masked email when viewing another user profile', async () => {
     userService.getUserProfile.mockResolvedValue({ data: { _id: 'USER123', email: 'alice@example.com', profile: { firstName: 'Alice' } } });
 
-    render(<ProfilePage />);
+    render(<MemoryRouter><ProfilePage /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText(maskEmail('alice@example.com'))).toBeInTheDocument();
@@ -39,7 +45,7 @@ describe('ProfilePage', () => {
 
     userService.getUserProfile.mockResolvedValue({ data: { _id: 'USER123', email: 'alice@example.com', profile: { firstName: 'Alice' } } });
 
-    render(<ProfilePage />);
+    render(<MemoryRouter><ProfilePage /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('alice@example.com')).toBeInTheDocument();

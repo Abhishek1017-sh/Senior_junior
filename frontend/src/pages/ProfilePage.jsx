@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FaStar, FaCalendarAlt, FaMapMarkerAlt, FaBriefcase, FaGraduationCap, FaEnvelope, FaComments, FaUserPlus, FaCheck } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
@@ -26,7 +26,7 @@ const ProfilePage = () => {
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [reviews, setReviews] = useState([]);
 
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     setLoading(true);
     try {
       const response = await userService.getUserProfile(userId);
@@ -44,12 +44,28 @@ const ProfilePage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  
+  // Fetch completed sessions between current user and the viewed profile
+  const fetchCompletedSessions = useCallback(async () => {
+    if (!currentUser) return;
+    try {
+      const res = await sessionService.getUserSessions();
+      const mySessions = res.data || [];
+      const filtered = mySessions.filter(s => (
+        (String(s.seniorId?._id || s.seniorId) === String(userId) || String(s.juniorId?._id || s.juniorId) === String(userId))
+      ) && s.status === 'completed');
+      setCompletedSessionsWithUser(filtered);
+    } catch (err) {
+      console.error('Error fetching related sessions:', err);
+    }
+  }, [currentUser, userId]);
 
   useEffect(() => {
     fetchUserProfile();
     fetchCompletedSessions();
-  }, [userId]);
+  }, [userId, fetchUserProfile, fetchCompletedSessions]);
 
   const handleReviewSubmit = async (reviewData) => {
     try {
@@ -62,20 +78,6 @@ const ProfilePage = () => {
     }
   };
 
-  // Fetch completed sessions between current user and the viewed profile
-  const fetchCompletedSessions = async () => {
-    if (!currentUser) return;
-    try {
-      const res = await sessionService.getUserSessions();
-      const mySessions = res.data || [];
-      const filtered = mySessions.filter(s => (
-        (String(s.seniorId?._id || s.seniorId) === String(userId) || String(s.juniorId?._id || s.juniorId) === String(userId))
-      ) && s.status === 'completed');
-      setCompletedSessionsWithUser(filtered);
-    } catch (err) {
-      console.error('Error fetching related sessions:', err);
-    }
-  };
 
   // Check connection status whenever currentUser or userId changes
   useEffect(() => {
@@ -105,7 +107,7 @@ const ProfilePage = () => {
         if (pending || pendingFromUser) setConnectionStatus('pending');
       }
     }
-  }, [currentUser, userId, localOverride]);
+  }, [currentUser, userId, localOverride, user?.pendingConnections]);
 
   const handleBookSession = () => {
     setShowBookingModal(true);
@@ -127,7 +129,7 @@ const ProfilePage = () => {
       }
 
       // send request
-      const response = await userService.sendConnectionRequest(user._id);
+      await userService.sendConnectionRequest(user._id);
       setConnectionStatus('pending');
       await refetchUser();
       // refresh target profile so we see pending from server
@@ -225,7 +227,7 @@ const ProfilePage = () => {
       <Container className="max-w-4xl">
         <div className="space-y-6">
       {/* Profile Header */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="card-surface rounded-lg shadow-md p-6">
         <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
           <img
             src={user.profile?.profilePictureUrl || '/default-avatar.png'}

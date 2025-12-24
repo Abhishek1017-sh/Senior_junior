@@ -1,11 +1,8 @@
-  import { useEffect, useState, useRef } from 'react';
-  import { useAuth } from '../context/AuthContext';
+import { useEffect, useState } from 'react';
 
-  const useSessionNotifications = (socket) => {
-    const { user } = useAuth();
-    const [sessionRequests, setSessionRequests] = useState([]);
-    const [sessionMessages, setSessionMessages] = useState({});
-    const notificationSoundRef = useRef(null);
+const useSessionNotifications = (socket) => {
+  const [sessionRequests, setSessionRequests] = useState([]);
+  const [sessionMessages, setSessionMessages] = useState({});
 
     useEffect(() => {
       if (!socket) return;

@@ -1,11 +1,14 @@
+import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import DashboardPage from '../DashboardPage';
 import sessionService from '../../services/sessionService';
 
 vi.mock('../../services/sessionService', () => ({
-  getUserSessions: vi.fn(),
+  default: {
+    getUserSessions: vi.fn(),
+  }
 }));
 
 vi.mock('../../context/AuthContext', () => ({

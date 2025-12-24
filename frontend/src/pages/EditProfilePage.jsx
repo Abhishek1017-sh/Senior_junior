@@ -9,7 +9,7 @@ import { AVAILABILITY_OPTIONS, AVAILABILITY_PRESETS, WEEK_DAYS } from '../utils/
 import Container from '../components/Container';
 
 const EditProfilePage = () => {
-  const { user, updateUser, refetchUser } = useAuth();
+  const { user, refetchUser } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -124,20 +124,21 @@ const EditProfilePage = () => {
       // If server returned the new URL, set preview so we immediately show the DP
       if (uploadRes?.data?.profilePictureUrl) {
         setPreviewUrl(uploadRes.data.profilePictureUrl);
-      } else {
+        } else {
         // fallback — fetch updated user to ensure preview reflects server state
         try {
           const updated = await authService.getCurrentUser();
           setPreviewUrl(updated?.data?.profile?.profilePictureUrl || '');
-        } catch (e) {
-          // ignore silently
+        } catch (err) {
+          // ignore silently but log for debugging
+          console.debug('Failed to fetch updated user for preview:', err);
         }
       }
       // Force re-fetch of profile (with auth headers) so profile page shows fresh location
       try {
         await userService.getUserProfile(user._id);
-      } catch (e) {
-        // ignore
+      } catch (err) {
+        console.debug('Ignored error fetching user profile post-save:', err);
       }
       navigate(`/profile/${user._id}`);
     } catch (err) {
@@ -152,7 +153,7 @@ const EditProfilePage = () => {
     <Container className="max-w-2xl">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Edit Profile</h1>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="card-surface rounded-lg shadow-md p-6 space-y-6">
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
             {error}

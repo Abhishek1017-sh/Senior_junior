@@ -15,7 +15,8 @@ export default defineConfig([
     ],
     languageOptions: {
       ecmaVersion: 2020,
-      globals: globals.browser,
+      // include browser globals and vitest test globals so test files lint correctly
+      globals: { ...globals.browser, ...(globals.vitest || {}) },
       parserOptions: {
         ecmaVersion: 'latest',
         ecmaFeatures: { jsx: true },

@@ -1,12 +1,24 @@
+import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom';
+import { MemoryRouter } from 'react-router-dom';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import EditProfilePage from '../EditProfilePage';
 import * as AuthContext from '../../context/AuthContext';
 import userService from '../../services/userService';
 import authService from '../../services/authService';
 
-vi.mock('../../services/userService', () => ({ uploadProfilePicture: vi.fn(), deleteProfilePicture: vi.fn() }));
-vi.mock('../../services/authService', () => ({ updateProfile: vi.fn(), getCurrentUser: vi.fn() }));
+vi.mock('../../services/userService', () => ({
+  default: {
+    uploadProfilePicture: vi.fn(),
+    deleteProfilePicture: vi.fn(),
+  }
+}));
+vi.mock('../../services/authService', () => ({
+  default: {
+    updateProfile: vi.fn(),
+    getCurrentUser: vi.fn(),
+  }
+}));
 
 describe('EditProfilePage', () => {
   beforeEach(() => {
@@ -20,7 +32,11 @@ describe('EditProfilePage', () => {
   it('submits profile update without picture', async () => {
     authService.updateProfile.mockResolvedValue({ data: { message: 'Profile updated', data: {} } });
 
-    render(<EditProfilePage />);
+    render(
+      <MemoryRouter>
+        <EditProfilePage />
+      </MemoryRouter>
+    );
     const firstName = screen.getByLabelText(/First Name/i);
     fireEvent.change(firstName, { target: { value: 'NewFirst' } });
 
@@ -40,7 +56,11 @@ describe('EditProfilePage', () => {
       refetchUser: refetchSpy,
     }));
 
-    render(<EditProfilePage />);
+    render(
+      <MemoryRouter>
+        <EditProfilePage />
+      </MemoryRouter>
+    );
 
     // set file on input
     const fileInput = screen.getByLabelText(/Change Picture/i).parentNode.querySelector('input[type="file"]');
@@ -62,7 +82,11 @@ describe('EditProfilePage', () => {
       refetchUser: refetchSpy,
     }));
 
-    render(<EditProfilePage />);
+    render(
+      <MemoryRouter>
+        <EditProfilePage />
+      </MemoryRouter>
+    );
 
     const removeBtn = screen.getByText('Remove Picture');
     fireEvent.click(removeBtn);
@@ -80,7 +104,11 @@ describe('EditProfilePage', () => {
       refetchUser: refetchSpy,
     }));
 
-    render(<EditProfilePage />);
+    render(
+      <MemoryRouter>
+        <EditProfilePage />
+      </MemoryRouter>
+    );
 
     // Toggle a preset
     const weekdayBtn = screen.getByRole('button', { name: /Weekdays/i });
@@ -91,8 +119,6 @@ describe('EditProfilePage', () => {
     const tueCheckbox = screen.getByLabelText('Tue');
     fireEvent.click(monCheckbox);
     fireEvent.click(tueCheckbox);
-    const startInput = screen.getByPlaceholderText(/start/i) || screen.getAllByRole('textbox')[0];
-
     // Set times (fallback to setting value via querySelector)
     const timeInputs = document.querySelectorAll('input[type=time]');
     if (timeInputs && timeInputs.length >= 2) {

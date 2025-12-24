@@ -6,7 +6,6 @@ import useSocket from '../hooks/useSocket';
 const SessionNotificationPanel = () => {
   const { socket } = useSocket();
   const { sessionRequests, acceptSession, declineSession, sendSessionMessage } = useSessionNotifications(socket);
-  const [expandedSession, setExpandedSession] = useState(null);
   const [replyMessage, setReplyMessage] = useState('');
 
   const handleAccept = (sessionId) => {

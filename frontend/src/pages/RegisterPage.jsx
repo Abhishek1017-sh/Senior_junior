@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import AuthFooter from '../components/AuthFooter';
 import { FaGoogle, FaGithub } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { USER_ROLES } from '../utils/constants';
@@ -59,24 +60,26 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link
-              to="/login"
-              className="font-medium text-blue-600 hover:text-blue-500"
-            >
-              Sign in
-            </Link>
-          </p>
+    <div className="auth-layout bg-gray-50">
+      <div className="auth-hero">
+        <div className="max-w-md text-left">
+          <img src="/auth-illustration.svg" alt="Auth illustration" className="mb-6 w-full max-w-[420px]" />
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-3">Create your account</h2>
+          <p className="text-sm text-gray-600">Join the community — sign up as a mentor or learner to start collaborating.</p>
         </div>
+      </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8 glass-card p-8 rounded-lg shadow-md">
+          <div>
+            <h2 className="text-2xl font-semibold text-gray-900 text-center">Create your account</h2>
+            <p className="mt-2 text-center text-sm text-gray-600">
+              Already have an account?{' '}
+              <Link to="/login" className="font-medium text-primary-600 hover:underline">Sign in</Link>
+            </p>
+          </div>
+
+          <form className="mt-6 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
               {error}
@@ -271,7 +274,7 @@ const RegisterPage = () => {
               <button
                 type="button"
                 onClick={() => handleOAuthRegister('google')}
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                className="w-full inline-flex oauth-btn justify-center py-2 px-4 rounded-md shadow-sm oauth-google text-sm font-medium text-gray-700"
               >
                 <FaGoogle className="text-red-500" />
                 <span className="ml-2">Google</span>
@@ -280,7 +283,7 @@ const RegisterPage = () => {
               <button
                 type="button"
                 onClick={() => handleOAuthRegister('github')}
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                className="w-full inline-flex oauth-btn justify-center py-2 px-4 rounded-md shadow-sm oauth-github text-sm font-medium"
               >
                 <FaGithub className="text-gray-900" />
                 <span className="ml-2">GitHub</span>
@@ -288,8 +291,13 @@ const RegisterPage = () => {
             </div>
           </div>
         </form>
+        <div className="mt-4">
+          <p className="text-center text-xs text-gray-400">By creating an account you agree to our <a href="#" className="text-primary-600">Terms</a> and <a href="#" className="text-primary-600">Privacy Policy</a>.</p>
+        </div>
+        <AuthFooter />
       </div>
     </div>
+  </div>
   );
 };
 

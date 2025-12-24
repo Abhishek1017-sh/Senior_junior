@@ -8,7 +8,7 @@ import { debounce } from '../utils/helpers';
 import Container from '../components/Container';
 
 const FindSeniorsPage = () => {
-  const { user, updateUser, refetchUser } = useAuth();
+  const { user, refetchUser } = useAuth();
   const [seniors, setSeniors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -58,9 +58,7 @@ const FindSeniorsPage = () => {
     }
   };
 
-  useEffect(() => {
-    fetchSeniors(currentPage, searchQuery, selectedSkills);
-  }, [currentPage]);
+  // Page changes are handled by the main effect above which listens to currentPage, searchQuery and selectedSkills
 
   const debouncedSearch = debounce((query) => {
     setSearchQuery(query);
@@ -94,7 +92,7 @@ const FindSeniorsPage = () => {
     <Container>
       <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="card-surface rounded-lg shadow-md p-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Find Mentors</h1>
         <p className="text-gray-600">
           Discover experienced professionals who can guide your career journey.
@@ -102,7 +100,7 @@ const FindSeniorsPage = () => {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="card-surface rounded-lg shadow-md p-6">
         <div className="flex flex-col md:flex-row gap-4 mb-4">
           {/* Search Bar */}
           <div className="flex-1 relative">
@@ -172,7 +170,7 @@ const FindSeniorsPage = () => {
       </div>
 
       {/* Results */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="card-surface rounded-lg shadow-md p-6">
         {loading ? (
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>

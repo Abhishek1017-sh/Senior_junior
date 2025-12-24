@@ -136,7 +136,7 @@ const MySessionsPage = () => {
     <Container>
       <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="card-surface rounded-lg shadow-md p-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">My Sessions</h1>
         <p className="text-gray-600">
           Manage your mentorship sessions and bookings.
@@ -144,7 +144,7 @@ const MySessionsPage = () => {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-lg shadow-md">
+      <div className="card-surface rounded-lg shadow-md">
         <div className="border-b">
           <nav className="flex">
             <button

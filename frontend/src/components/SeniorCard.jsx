@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 
 import { maskString } from '../utils/helpers';
 
-const SeniorCard = ({ senior, onConnectionUpdate, onUserUpdate }) => {
+const SeniorCard = ({ senior, onConnectionUpdate }) => {
   const { user, refetchUser } = useAuth();
   const [isConnecting, setIsConnecting] = useState(false);
   const [localConnectionState, setLocalConnectionState] = useState('none');
@@ -53,7 +53,7 @@ const SeniorCard = ({ senior, onConnectionUpdate, onUserUpdate }) => {
     setIsConnecting(true);
     
     try {
-      const response = await userService.sendConnectionRequest(senior._id);
+      await userService.sendConnectionRequest(senior._id);
       // show pending immediately for good UX
       setLocalConnectionState('pending');
       // re-sync with backend user

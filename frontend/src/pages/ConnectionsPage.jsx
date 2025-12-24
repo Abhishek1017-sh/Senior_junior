@@ -107,7 +107,7 @@ const ConnectionsPage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Pending Requests */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="card-surface rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
             <FaUserPlus className="mr-2 text-blue-600" />
             Pending Requests ({pendingRequests.length})
@@ -159,7 +159,7 @@ const ConnectionsPage = () => {
         </div>
 
         {/* Current Connections */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="card-surface rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
             <FaUserCheck className="mr-2 text-green-600" />
             My Connections ({connections.length})
