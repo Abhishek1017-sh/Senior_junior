@@ -26,11 +26,15 @@ const reportRoutes = require('./routes/reportRoutes');
 const app = express();
 const server = http.createServer(app);
 
+const allowedFrontendOrigins = process.env.FRONTEND_URL
+  ? [process.env.FRONTEND_URL]
+  : ['http://localhost:5173', 'http://localhost:5174'];
+const corsOrigin = process.env.FRONTEND_URL ? allowedFrontendOrigins : true;
+
 // Initialize Socket.io
 const io = new Server(server, {
   cors: {
-    // Allow the common local dev ports (5173 & 5174). If FRONTEND_URL is set, use that.
-    origin: process.env.FRONTEND_URL || ['http://localhost:5173', 'http://localhost:5174'],
+    origin: corsOrigin,
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -48,7 +52,7 @@ app.use(helmet({
 app.use(morgan('dev')); // Logging
 app.use(cors({
   // Allow the frontend dev server(s). Use FRONTEND_URL env var when provided.
-  origin: process.env.FRONTEND_URL || ['http://localhost:5173', 'http://localhost:5174'],
+  origin: corsOrigin,
   credentials: true,
 }));
 app.use(express.json()); // Parse JSON bodies

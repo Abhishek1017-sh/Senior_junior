@@ -13,8 +13,9 @@ const useSocket = (initialUnreadCounts = new Map()) => {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
-      socketRef.current = io(SOCKET_URL, {
+      const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || '';
+      const socketEndpoint = SOCKET_URL || undefined;
+      socketRef.current = io(socketEndpoint, {
         auth: { token: localStorage.getItem('token') },
         transports: ['websocket', 'polling'],
       });
