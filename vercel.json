@@ -18,6 +18,10 @@
     {
       "source": "/socket.io/:path*",
       "destination": "/_/backend/socket.io/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
