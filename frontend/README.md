@@ -18,7 +18,7 @@ To deploy this frontend on Vercel and connect it to your Railway backend, set th
 - `VITE_API_BASE_URL` = `https://seniorjunior-production.up.railway.app/api`
 - `VITE_SOCKET_URL` = `https://seniorjunior-production.up.railway.app`
 
-Also configure your Railway backend to allow requests from your Vercel frontend domain by setting `FRONTEND_URL` in Railway to your Vercel app URL, for example `https://<your-app>.vercel.app`.
+Also configure your Railway backend to allow requests from your Vercel frontend domain by setting `FRONTEND_URL` in Railway to your Vercel app URL, for example `https://senior-junior-3e2w.vercel.app`.
 
 ## Expanding the ESLint configuration
 

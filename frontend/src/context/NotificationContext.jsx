@@ -23,9 +23,10 @@ export const NotificationProvider = ({ children }) => {
     if (!isAuthenticated) return;
 
     try {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
       const [connectionsRes, sessionsRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/connections/pending/count'),
-        axios.get('http://localhost:5000/api/sessions?status=pending')
+        axios.get(`${apiBaseUrl}/connections/pending/count`),
+        axios.get(`${apiBaseUrl}/sessions?status=pending`)
       ]);
 
       setPendingConnectionsCount(connectionsRes.data.count);
